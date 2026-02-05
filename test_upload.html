@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test File Upload</title>
+</head>
+<body>
+    <h2>Test File Upload to VAST Scanner</h2>
+    
+    <form method="POST" action="http://localhost:5000/create" enctype="multipart/form-data">
+        <div>
+            <label>Project Name:</label><br>
+            <input type="text" name="project_name" value="Test Upload" required>
+        </div>
+        <div>
+            <label>Scanner Type:</label><br>
+            <input type="text" name="scanner_type" value="semgrep" required>
+        </div>
+        <div>
+            <label>Upload File:</label><br>
+            <input type="file" name="code_file">
+        </div>
+        <div>
+            <label>OR Paste Code:</label><br>
+            <textarea name="code_content" rows="10" cols="50">
+// Test code - you can leave this empty if uploading a file
+console.log("Test");
+            </textarea>
+        </div>
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    
+    <h3>Test Files to Upload:</h3>
+    <ul>
+        <li><strong>JavaScript:</strong> test_codes/test_xss.js - Contains XSS and eval vulnerabilities</li>
+        <li><strong>PHP:</strong> test_codes/test_sqli.php - Contains SQL injection vulnerabilities</li>
+        <li><strong>Java:</strong> test_codes/test_java.java - Contains multiple security issues</li>
+        <li><strong>C:</strong> test_codes/test_buffer.c - Contains buffer overflow vulnerabilities</li>
+    </ul>
+</body>
+</html>

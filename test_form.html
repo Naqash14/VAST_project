@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Test Form Submission</h2>
+    <form method="POST" action="http://localhost:5000/create">
+        <div>
+            <label>Project Name:</label><br>
+            <input type="text" name="project_name" value="Test Project" required>
+        </div>
+        <div>
+            <label>Scanner Type:</label><br>
+            <input type="text" name="scanner_type" value="semgrep" required>
+        </div>
+        <div>
+            <label>Code Content:</label><br>
+            <textarea name="code_content" rows="10" cols="50" required>
+import sqlite3
+
+def get_user(user_id):
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    return cursor.fetchone()
+
+password = "admin123"
+            </textarea>
+        </div>
+        <div>
+            <button type="submit">Submit Test Form</button>
+        </div>
+    </form>
+</body>
+</html>

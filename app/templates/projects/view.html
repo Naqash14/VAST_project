@@ -1,0 +1,157 @@
+{% extends "layout/base.html" %}
+
+{% block title %}View Project - VAST{% endblock %}
+
+{% block page_title %}Project: {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Project Info -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="fas fa-project-diagram me-2"></i>{{ project.project_name }}
+                            </h4>
+                            <p class="text-muted mb-0">
+                                <i class="far fa-calendar me-1"></i>
+                                Created: {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                | Updated: {{ project.updated_at.strftime('%Y-%m-%d %H:%M') if project.updated_at else 'Never' }}
+                            </p>
+                            {% if project.filename %}
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-file me-1"></i>File: {{ project.filename }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{{ url_for('projects.scan', project_id=project.id) }}" 
+                               class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i> Scan
+                            </a>
+                            <a href="{{ url_for('projects.existing') }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Code Preview -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>Source Code
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="code-preview" style="max-height: 500px; overflow-y: auto;">
+                        <pre class="mb-0 p-3" style="background: #f8f9fa; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;">
+{{ project.code_content }}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scan History -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Scan History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if scan_results %}
+                    <div class="list-group list-group-flush">
+                        {% for scan in scan_results %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ scan.tool_name|upper }}</h6>
+                                    <small class="text-muted">
+                                        {{ scan.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ 'danger' if scan.severity == 'critical' else 'warning' if scan.severity == 'high' else 'info' if scan.severity == 'medium' else 'secondary' if scan.severity == 'low' else 'success' }}">
+                                    {{ scan.severity|upper }}
+                                </span>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <a href="{{ url_for('projects.download_report', scan_id=scan.id) }}" 
+                                   class="btn btn-sm btn-success w-100 mb-1">
+                                    <i class="fas fa-download me-1"></i> Download Report
+                                </a>
+                                
+                                <form method="POST" action="{{ url_for('projects.delete_scan', scan_id=scan.id) }}"
+                                      onsubmit="return confirm('Delete this scan result?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                        <i class="fas fa-trash me-1"></i> Delete Scan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No scans yet</p>
+                        <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='semgrep') }}" 
+                           class="btn btn-primary btn-sm">
+                            Run First Scan
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add line numbers to code preview
+        const codePreview = document.querySelector('.code-preview pre');
+        if (codePreview) {
+            const lines = codePreview.textContent.split('\n').length;
+            const lineNumbers = document.createElement('div');
+            lineNumbers.className = 'line-numbers';
+            lineNumbers.style.cssText = `
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 40px;
+                background: #e9ecef;
+                border-right: 1px solid #dee2e6;
+                font-family: 'Courier New', monospace;
+                font-size: 13px;
+                line-height: 1.5;
+                text-align: right;
+                padding: 12px 5px;
+                color: #6c757d;
+                user-select: none;
+            `;
+            
+            lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => 
+                `<div>${i + 1}</div>`
+            ).join('');
+            
+            codePreview.parentNode.style.position = 'relative';
+            codePreview.parentNode.style.paddingLeft = '50px';
+            codePreview.parentNode.insertBefore(lineNumbers, codePreview);
+        }
+    });
+</script>
+{% endblock %}

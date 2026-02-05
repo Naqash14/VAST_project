@@ -1,0 +1,446 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Scan Results - VAST{% endblock %}
+
+{% block page_title %}Scan Results: {{ project.project_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .severity-badge {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .severity-critical {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        color: white;
+    }
+    
+    .severity-high {
+        background: linear-gradient(135deg, #f8961e 0%, #e85d04 100%);
+        color: white;
+    }
+    
+    .severity-medium {
+        background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+        color: white;
+    }
+    
+    .severity-low {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    .severity-info {
+        background: linear-gradient(135deg, #adb5bd 0%, #6c757d 100%);
+        color: white;
+    }
+    
+    .finding-card {
+        border-left: 4px solid;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .finding-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .finding-card.critical {
+        border-left-color: #f72585;
+        background: rgba(247, 37, 133, 0.05);
+    }
+    
+    .finding-card.high {
+        border-left-color: #f8961e;
+        background: rgba(248, 150, 30, 0.05);
+    }
+    
+    .finding-card.medium {
+        border-left-color: #4cc9f0;
+        background: rgba(76, 201, 240, 0.05);
+    }
+    
+    .finding-card.low {
+        border-left-color: #6c757d;
+        background: rgba(108, 117, 125, 0.05);
+    }
+    
+    .finding-card.info {
+        border-left-color: #adb5bd;
+        background: rgba(173, 181, 189, 0.05);
+    }
+    
+    .code-snippet {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 10px 0;
+    }
+    
+    .line-number {
+        color: #6c757d;
+        user-select: none;
+        padding-right: 15px;
+        text-align: right;
+    }
+    
+    .line-highlight {
+        background: rgba(247, 37, 133, 0.2);
+        border-left: 3px solid #f72585;
+    }
+    
+    .stats-card {
+        text-align: center;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .stats-card.critical {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+    }
+    
+    .stats-card.high {
+        background: linear-gradient(135deg, #f8961e 0%, #e85d04 100%);
+    }
+    
+    .stats-card.medium {
+        background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+    }
+    
+    .stats-card.low {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .stats-card.info {
+        background: linear-gradient(135deg, #adb5bd 0%, #6c757d 100%);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Project Info -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="fas fa-project-diagram me-2"></i>{{ project.project_name }}
+                            </h4>
+                            <p class="text-muted mb-0">
+                                <i class="far fa-calendar me-1"></i>
+                                Created: {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% if project.updated_at %}
+                                | Updated: {{ project.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-plus me-1"></i> New Scan
+                            </a>
+                            <a href="{{ url_for('projects.existing') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-1"></i> All Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-tools me-2"></i>Analysis Tools
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <form method="POST" action="{{ url_for('projects.rescan', project_id=project.id) }}">
+                                <button type="submit" class="btn btn-primary w-100 h-100 p-3">
+                                    <i class="fas fa-redo fa-2x mb-2"></i>
+                                    <h5>Rescan</h5>
+                                    <p class="small mb-0">Run Semgrep again</p>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="btn btn-outline-secondary w-100 h-100 p-3 disabled">
+                                <i class="fas fa-brain fa-2x mb-2"></i>
+                                <h5>Symbolic</h5>
+                                <p class="small mb-0">KLEE (Coming Soon)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="btn btn-outline-secondary w-100 h-100 p-3 disabled">
+                                <i class="fas fa-random fa-2x mb-2"></i>
+                                <h5>Fuzz Test</h5>
+                                <p class="small mb-0">LibFuzzer (Coming Soon)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="btn btn-outline-secondary w-100 h-100 p-3 disabled">
+                                <i class="fas fa-sync-alt fa-2x mb-2"></i>
+                                <h5>Hybrid</h5>
+                                <p class="small mb-0">Combined (Coming Soon)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scan Results -->
+        <div class="col-12">
+            {% if scan_results %}
+                {% for result in scan_results %}
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="fas fa-search me-2"></i>{{ result.tool|upper }} Scan Results
+                            </h5>
+                            <small class="text-muted">
+                                <i class="far fa-clock me-1"></i>
+                                {{ result.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </small>
+                        </div>
+                        <div>
+                            {% if result.findings.total_findings > 0 %}
+                            <span class="badge bg-danger me-2">{{ result.findings.total_findings }} Issues</span>
+                            {% else %}
+                            <span class="badge bg-success me-2">Clean</span>
+                            {% endif %}
+                            <a href="{{ url_for('projects.download_report', scan_id=result.id) }}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-download me-1"></i> PDF Report
+                            </a>
+                            <form method="POST" action="{{ url_for('projects.delete_scan', scan_id=result.id) }}" 
+                                  style="display: inline;" 
+                                  onsubmit="return confirm('Delete this scan result?');">
+                                <button type="submit" class="btn btn-danger btn-sm ms-1">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if result.findings.total_findings > 0 %}
+                            <!-- Statistics -->
+                            <div class="row mb-4">
+                                {% if result.findings.by_severity.critical > 0 %}
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card critical">
+                                        <div class="stats-number">{{ result.findings.by_severity.critical }}</div>
+                                        <div class="stats-label">CRITICAL</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.findings.by_severity.high > 0 %}
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card high">
+                                        <div class="stats-number">{{ result.findings.by_severity.high }}</div>
+                                        <div class="stats-label">HIGH</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.findings.by_severity.medium > 0 %}
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card medium">
+                                        <div class="stats-number">{{ result.findings.by_severity.medium }}</div>
+                                        <div class="stats-label">MEDIUM</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.findings.by_severity.low > 0 %}
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card low">
+                                        <div class="stats-number">{{ result.findings.by_severity.low }}</div>
+                                        <div class="stats-label">LOW</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.findings.by_severity.info > 0 %}
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card info">
+                                        <div class="stats-number">{{ result.findings.by_severity.info }}</div>
+                                        <div class="stats-label">INFO</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="col-md-2 col-6 mb-2">
+                                    <div class="stats-card" style="background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);">
+                                        <div class="stats-number">{{ result.findings.total_findings }}</div>
+                                        <div class="stats-label">TOTAL</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detailed Findings -->
+                            <h6 class="mb-3">Detailed Findings:</h6>
+                            <div class="findings-list">
+                                {% for finding in result.findings.details %}
+                                <div class="finding-card {{ finding.severity }} p-3 mb-3 rounded">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="severity-badge severity-{{ finding.severity }} me-2">
+                                                {{ finding.severity|upper }}
+                                            </span>
+                                            <strong>{{ finding.rule_id }}</strong>
+                                        </div>
+                                        <small class="text-muted">
+                                            Line {{ finding.line }}{% if finding.end_line and finding.end_line != finding.line %}-{{ finding.end_line }}{% endif %}
+                                        </small>
+                                    </div>
+                                    
+                                    <p class="mb-2">{{ finding.message }}</p>
+                                    
+                                    {% if finding.code_snippet %}
+                                    <div class="code-snippet">
+                                        <pre class="mb-0">{{ finding.code_snippet }}</pre>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if finding.type != 'other' %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-tag me-1"></i>
+                                            Type: {{ finding.type|replace('_', ' ')|title }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                                <h4 class="text-success">No Security Issues Found!</h4>
+                                <p class="text-muted">Great job! No vulnerabilities were detected in your code.</p>
+                                <p class="text-muted small">Note: This doesn't guarantee 100% security. Consider manual review for critical applications.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Scans Yet</h4>
+                        <p class="text-muted">Run a scan to see results here</p>
+                        <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='semgrep') }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-play me-1"></i> Run First Scan
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Expand/collapse code snippets
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add copy button to code snippets
+        document.querySelectorAll('.code-snippet').forEach(snippet => {
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn btn-sm btn-outline-secondary float-end';
+            copyBtn.innerHTML = '<i class="fas fa-copy me-1"></i>Copy';
+            copyBtn.style.marginTop = '-10px';
+            copyBtn.style.marginRight = '-10px';
+            
+            copyBtn.addEventListener('click', function() {
+                const code = snippet.querySelector('pre').textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                    copyBtn.classList.remove('btn-outline-secondary');
+                    copyBtn.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                        copyBtn.classList.remove('btn-success');
+                        copyBtn.classList.add('btn-outline-secondary');
+                    }, 2000);
+                });
+            });
+            
+            snippet.insertBefore(copyBtn, snippet.firstChild);
+        });
+        
+        // Filter findings by severity
+        const filterButtons = document.createElement('div');
+        filterButtons.className = 'btn-group mb-4';
+        filterButtons.innerHTML = `
+            <button class="btn btn-outline-danger active" data-filter="all">All</button>
+            <button class="btn btn-outline-danger" data-filter="critical">Critical</button>
+            <button class="btn btn-outline-warning" data-filter="high">High</button>
+            <button class="btn btn-outline-info" data-filter="medium">Medium</button>
+            <button class="btn btn-outline-secondary" data-filter="low">Low</button>
+        `;
+        
+        const findingsList = document.querySelector('.findings-list');
+        if (findingsList) {
+            findingsList.parentNode.insertBefore(filterButtons, findingsList);
+            
+            // Add filter functionality
+            filterButtons.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    
+                    // Update active button
+                    filterButtons.querySelectorAll('button').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Filter findings
+                    document.querySelectorAll('.finding-card').forEach(card => {
+                        if (filter === 'all' || card.classList.contains(filter)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

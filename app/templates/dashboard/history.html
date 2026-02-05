@@ -1,0 +1,125 @@
+{% extends "layout/base.html" %}
+
+{% block title %}History - VAST{% endblock %}
+
+{% block page_title %}Scan History{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Scans
+                    </h5>
+                    <span class="badge bg-primary">{{ projects|length }} projects</span>
+                </div>
+                
+                <div class="card-body">
+                    {% if projects %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Project Name</th>
+                                    <th>Created</th>
+                                    <th>Last Scan</th>
+                                    <th>Total Scans</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in projects %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            <i class="fas fa-project-diagram me-2"></i>
+                                            {{ project.project_name }}
+                                        </strong>
+                                    </td>
+                                    <td>{{ project.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if project.scan_results %}
+                                            {{ project.scan_results[0].created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            <span class="text-muted">No scans yet</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ project.scan_results|length }}</span>
+                                    </td>
+                                    <td>
+                                        {% if project.scan_results %}
+                                            {% set last_scan = project.scan_results[0] %}
+                                            {% if last_scan.severity == 'critical' %}
+                                            <span class="badge bg-danger">Critical</span>
+                                            {% elif last_scan.severity == 'high' %}
+                                            <span class="badge bg-warning">High</span>
+                                            {% elif last_scan.severity == 'medium' %}
+                                            <span class="badge bg-info">Medium</span>
+                                            {% elif last_scan.severity == 'low' %}
+                                            <span class="badge bg-secondary">Low</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Clean</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('projects.scan', project_id=project.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                            <a href="{{ url_for('projects.view', project_id=project.id) }}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <form method="POST" 
+                                                  action="{{ url_for('dashboard.delete_project', project_id=project.id) }}"
+                                                  style="display: inline;"
+                                                  onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No projects found</h4>
+                        <p class="text-muted">Start by creating your first project</p>
+                        <a href="{{ url_for('projects.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create New Project
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add confirmation for delete buttons
+        document.querySelectorAll('form[onsubmit]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to delete this project?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
