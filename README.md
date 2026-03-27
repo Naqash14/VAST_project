@@ -1,4 +1,5 @@
-**VAST**
+## **VAST**
+
 A comprehensive web-based vulnerability analysis platform for security professionals and developers. Scan source code for security vulnerabilities using multiple analysis techniques.
 
 ## 🚀 Features
