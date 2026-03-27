@@ -472,3 +472,35 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     test_universal_scanner()
+# Custom rules for better C detection
+CUSTOM_C_RULES = [
+    {
+        "id": "custom.c.format-string",
+        "pattern": "printf($X)",
+        "message": "Format string vulnerability: user input as format string",
+        "severity": "high",
+        "languages": ["c"]
+    },
+    {
+        "id": "custom.c.scanf-unsafe",
+        "pattern": "scanf(\"%s\", $X)",
+        "message": "Unsafe scanf without bounds checking",
+        "severity": "high",
+        "languages": ["c"]
+    }
+]
+
+def apply_custom_rules(self, code, findings):
+    """Apply custom regex patterns for better detection"""
+    import re
+    
+    # Check for printf with variable (not string literal)
+    if re.search(r'printf\s*\([^"]', code):
+        findings.append({
+            "severity": "high",
+            "message": "Format string vulnerability detected",
+            "rule_id": "custom.format-string",
+            "line": self._find_line_number(code, 'printf')
+        })
+    
+    return findings

@@ -13,26 +13,39 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
             padding: 20px;
         }
         
-        .auth-box {
+        .signup-box {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
             width: 100%;
             max-width: 450px;
             overflow: hidden;
         }
         
-        .auth-header {
+        .signup-header {
             background: #4361ee;
             color: white;
             padding: 30px;
             text-align: center;
         }
         
-        .auth-body {
+        .signup-header h2 {
+            margin: 10px 0 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .signup-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .signup-body {
             padding: 30px;
         }
         
@@ -40,176 +53,227 @@
             margin-bottom: 20px;
         }
         
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
         .form-control {
+            width: 100%;
             padding: 12px 15px;
+            border: 2px solid #e9ecef;
             border-radius: 8px;
-            border: 1px solid #ddd;
-            font-size: 16px;
+            font-size: 15px;
+            transition: all 0.3s ease;
         }
         
         .form-control:focus {
             border-color: #4361ee;
+            outline: none;
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
         
-        .btn-primary {
+        .btn-signup {
+            width: 100%;
+            padding: 12px;
             background: #4361ee;
             border: none;
-            padding: 12px;
+            border-radius: 8px;
+            color: white;
             font-size: 16px;
             font-weight: 600;
-            border-radius: 8px;
-            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0 15px;
         }
         
-        .btn-primary:hover {
+        .btn-signup:hover {
             background: #3a56d4;
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
         }
         
-        .strength-bar {
-            height: 5px;
+        .btn-signup:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .links a {
+            color: #4361ee;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
             background: #e9ecef;
-            border-radius: 3px;
-            margin-top: 5px;
+            border-radius: 2px;
             overflow: hidden;
         }
         
-        .strength-fill {
+        .strength-bar {
             height: 100%;
             width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 3px;
+            transition: all 0.3s ease;
         }
         
-        .password-match {
-            font-size: 14px;
-            margin-top: 5px;
+        .strength-text {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="auth-box">
-        <div class="auth-header">
-            <h3><i class="fas fa-shield-alt me-2"></i>VAST Scanner</h3>
-            <p class="mb-0">Create your account</p>
+    <div class="signup-box">
+        <div class="signup-header">
+            <i class="fas fa-shield-alt fa-3x"></i>
+            <h2>VAST Scanner</h2>
+            <p>Create new account</p>
         </div>
         
-        <div class="auth-body">
+        <div class="signup-body">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        <div class="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
             
-            <form method="POST" action="{{ url_for('auth.signup') }}">
+            <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-control" name="username" required 
-                           placeholder="Enter username" autocomplete="username">
+                    <label><i class="fas fa-user me-2"></i>Username</label>
+                    <input type="text" class="form-control" name="username" placeholder="Choose username" required>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" name="email" required 
-                           placeholder="Enter email" autocomplete="email">
+                    <label><i class="fas fa-envelope me-2"></i>Email</label>
+                    <input type="email" class="form-control" name="email" placeholder="Enter email" required>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required 
-                           placeholder="Create password" autocomplete="new-password">
-                    <div class="strength-bar">
-                        <div class="strength-fill" id="strengthFill"></div>
+                    <label><i class="fas fa-lock me-2"></i>Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Create password" required>
+                    <div class="password-strength">
+                        <div class="strength-bar" id="strengthBar"></div>
                     </div>
-                    <small id="strengthText" class="text-muted">Password strength</small>
+                    <div class="strength-text" id="strengthText"></div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required 
-                           placeholder="Confirm password" autocomplete="new-password">
-                    <div id="matchText" class="password-match"></div>
+                    <label><i class="fas fa-lock me-2"></i>Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Confirm password" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary mt-3">
-                    <i class="fas fa-user-plus me-2"></i>Create Account
+                <button type="submit" class="btn-signup" id="signupBtn">
+                    <i class="fas fa-user-plus me-2"></i>Sign Up
                 </button>
                 
-                <div class="text-center mt-3">
-                    <p class="text-muted mb-0">Already have an account? 
-                        <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Sign In</a>
-                    </p>
+                <div class="links">
+                    <span style="color: #666;">Already have account?</span>
+                    <a href="{{ url_for('auth.login') }}">Sign In</a>
                 </div>
             </form>
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Password strength checker
         const password = document.getElementById('password');
         const confirmPassword = document.getElementById('confirmPassword');
-        const strengthFill = document.getElementById('strengthFill');
+        const strengthBar = document.getElementById('strengthBar');
         const strengthText = document.getElementById('strengthText');
-        const matchText = document.getElementById('matchText');
         
         password.addEventListener('input', function() {
             const value = this.value;
             let strength = 0;
             
-            if (value.length >= 8) strength += 1;
-            if (/[a-z]/.test(value)) strength += 1;
-            if (/[A-Z]/.test(value)) strength += 1;
-            if (/[0-9]/.test(value)) strength += 1;
-            if (/[^A-Za-z0-9]/.test(value)) strength += 1;
+            if (value.length >= 8) strength++;
+            if (/[a-z]/.test(value)) strength++;
+            if (/[A-Z]/.test(value)) strength++;
+            if (/[0-9]/.test(value)) strength++;
+            if (/[^A-Za-z0-9]/.test(value)) strength++;
             
-            const percent = (strength / 5) * 100;
-            strengthFill.style.width = percent + '%';
+            const width = (strength / 5) * 100;
+            strengthBar.style.width = width + '%';
             
             if (strength <= 1) {
-                strengthFill.style.background = '#dc3545';
-                strengthText.textContent = 'Weak password';
-                strengthText.className = 'text-danger';
-            } else if (strength <= 2) {
-                strengthFill.style.background = '#ffc107';
-                strengthText.textContent = 'Medium password';
-                strengthText.className = 'text-warning';
+                strengthBar.style.background = '#dc3545';
+                strengthText.innerHTML = '<span style="color: #dc3545;">Weak password</span>';
             } else if (strength <= 3) {
-                strengthFill.style.background = '#17a2b8';
-                strengthText.textContent = 'Good password';
-                strengthText.className = 'text-info';
+                strengthBar.style.background = '#ffc107';
+                strengthText.innerHTML = '<span style="color: #ffc107;">Medium password</span>';
             } else {
-                strengthFill.style.background = '#28a745';
-                strengthText.textContent = 'Strong password';
-                strengthText.className = 'text-success';
+                strengthBar.style.background = '#28a745';
+                strengthText.innerHTML = '<span style="color: #28a745;">Strong password</span>';
             }
-            
-            checkMatch();
         });
         
-        confirmPassword.addEventListener('input', checkMatch);
-        
-        function checkMatch() {
-            if (confirmPassword.value === '') {
-                matchText.textContent = '';
-                matchText.className = 'password-match';
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            const username = document.querySelector('input[name="username"]').value.trim();
+            const email = document.querySelector('input[name="email"]').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('signupBtn');
+            
+            if (!username || !email || !password || !confirm) {
+                e.preventDefault();
+                alert('Please fill in all fields');
                 return;
             }
             
-            if (password.value === confirmPassword.value) {
-                matchText.textContent = '✓ Passwords match';
-                matchText.className = 'password-match text-success';
-            } else {
-                matchText.textContent = '✗ Passwords do not match';
-                matchText.className = 'password-match text-danger';
+            if (password !== confirm) {
+                e.preventDefault();
+                alert('Passwords do not match');
+                return;
             }
-        }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Creating account...';
+        });
     </script>
 </body>
 </html>

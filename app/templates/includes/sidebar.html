@@ -1,223 +1,343 @@
 <div class="sidebar">
-    <div class="sidebar-header">
-        <div class="logo-container">
-            <i class="fas fa-shield-alt fa-2x"></i>
-            <h3>VAST Scanner</h3>
-        </div>
+    <!-- Logo -->
+    <div class="sidebar-logo">
+        <i class="fas fa-shield-alt"></i>
+        <span>VAST Scanner</span>
+        <small>v2.0</small>
     </div>
-    
-    <div class="sidebar-user">
+
+    <!-- User Info -->
+    <div class="user-section">
         <div class="user-avatar">
             <i class="fas fa-user-circle"></i>
         </div>
-        <div class="user-info">
-            <strong>{{ current_user.username }}</strong>
-            <small>{{ current_user.email }}</small>
+        <div class="user-details">
+            <div class="user-name">{{ current_user.username }}</div>
+            <div class="user-email">{{ current_user.email }}</div>
+            <div class="user-badge">
+                <i class="fas fa-check-circle"></i> Verified
+            </div>
         </div>
     </div>
-    
-    <ul class="sidebar-menu">
-        <li>
-            <a href="{{ url_for('dashboard.index') }}" class="active">
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">MAIN</div>
+            
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
-        </li>
-        <li>
-            <a href="{{ url_for('projects.create') }}">
+            
+            <a href="{{ url_for('projects.create') }}" class="nav-item {% if request.endpoint == 'projects.create' %}active{% endif %}">
                 <i class="fas fa-plus-circle"></i>
                 <span>New Scan</span>
             </a>
-        </li>
-        <li>
-            <a href="{{ url_for('projects.existing') }}">
+            
+            <a href="{{ url_for('projects.existing') }}" class="nav-item {% if request.endpoint == 'projects.existing' %}active{% endif %}">
                 <i class="fas fa-folder-open"></i>
                 <span>Projects</span>
+                <span class="badge">{{ current_user.projects|length }}</span>
             </a>
-        </li>
-        <li>
-            <a href="{{ url_for('dashboard.history') }}">
+            
+            <a href="{{ url_for('dashboard.history') }}" class="nav-item {% if request.endpoint == 'dashboard.history' %}active{% endif %}">
                 <i class="fas fa-history"></i>
                 <span>History</span>
             </a>
-        </li>
-        <li class="menu-divider">Analysis Tools</li>
-        <li>
-            <a href="#" onclick="showToolModal('semgrep')">
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">ANALYSIS TOOLS</div>
+            
+            <div class="nav-item tool-available">
                 <i class="fas fa-search"></i>
                 <span>Static Analysis</span>
-                <span class="badge bg-success">Semgrep</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="disabled">
+                <span class="tool-tag semgrep">Semgrep</span>
+            </div>
+            
+            <div class="nav-item tool-coming">
                 <i class="fas fa-brain"></i>
                 <span>Symbolic Analysis</span>
-                <span class="badge bg-warning">KLEE</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="disabled">
+                <span class="tool-tag klee">KLEE</span>
+                <span class="coming-soon">SOON</span>
+            </div>
+            
+            <div class="nav-item tool-coming">
                 <i class="fas fa-random"></i>
-                <span>Fuzz Testing</span>
-                <span class="badge bg-warning">LibFuzzer</span>
-            </a>
-        </li>
-        <li>
-            <a href="#" class="disabled">
+                <span>Fuzzy Testing</span>
+                <span class="tool-tag libfuzzer">LibFuzzer</span>
+                <span class="coming-soon">SOON</span>
+            </div>
+            
+            <div class="nav-item tool-coming">
                 <i class="fas fa-sync-alt"></i>
                 <span>Hybrid Analysis</span>
-                <span class="badge bg-warning">Combined</span>
-            </a>
-        </li>
-        <li class="menu-divider"></li>
-        <li>
-            <a href="{{ url_for('auth.logout') }}" class="logout">
+                <span class="tool-tag hybrid">Combined</span>
+                <span class="coming-soon">SOON</span>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">ACCOUNT</div>
+            
+            <div class="nav-item" onclick="alert('Settings coming soon!')">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+            
+            <a href="{{ url_for('auth.logout') }}" class="nav-item logout">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
-        </li>
-    </ul>
+        </div>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <div class="footer-item">
+            <i class="fas fa-lock"></i>
+            <span>Secure Connection</span>
+        </div>
+    </div>
 </div>
 
 <style>
+/* Sidebar Styles */
 .sidebar {
-    width: 250px;
-    background: linear-gradient(180deg, #2c3e50 0%, #1a2530 100%);
-    color: white;
+    width: 280px;
     height: 100vh;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 0;
     overflow-y: auto;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar-header {
-    padding: 20px;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo-container i {
-    color: #4cc9f0;
-    font-size: 2.5rem;
-}
-
-.logo-container h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.sidebar-user {
-    padding: 20px;
+/* Logo */
+.sidebar-logo {
+    padding: 24px 20px;
     display: flex;
     align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logo i {
+    font-size: 28px;
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.sidebar-logo span {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.sidebar-logo small {
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    color: #94a3b8;
+}
+
+/* User Section */
+.user-section {
+    padding: 20px;
+    display: flex;
     gap: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
 }
 
-.user-avatar {
-    width: 50px;
-    height: 50px;
-    background: rgba(76, 201, 240, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: #4cc9f0;
+.user-avatar i {
+    font-size: 48px;
+    color: #3b82f6;
 }
 
-.user-info {
+.user-details {
     flex: 1;
 }
 
-.user-info strong {
-    display: block;
-    font-size: 0.95rem;
+.user-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: white;
+    margin-bottom: 4px;
 }
 
-.user-info small {
-    font-size: 0.8rem;
-    opacity: 0.7;
+.user-email {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    word-break: break-all;
 }
 
-.sidebar-menu {
-    list-style: none;
+.user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-radius: 20px;
+}
+
+.user-badge i {
+    font-size: 10px;
+}
+
+/* Navigation */
+.sidebar-nav {
+    flex: 1;
     padding: 20px 0;
-    margin: 0;
 }
 
-.sidebar-menu li {
-    margin: 0;
+.nav-section {
+    margin-bottom: 24px;
 }
 
-.sidebar-menu li a {
+.nav-section-title {
+    padding: 0 20px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+}
+
+.nav-item {
     display: flex;
     align-items: center;
     padding: 12px 20px;
-    color: rgba(255,255,255,0.8);
+    color: #94a3b8;
     text-decoration: none;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    cursor: pointer;
 }
 
-.sidebar-menu li a:hover {
-    background: rgba(76, 201, 240, 0.1);
+.nav-item:hover {
+    background: rgba(59, 130, 246, 0.1);
     color: white;
-    border-left-color: #4cc9f0;
+    border-left-color: #3b82f6;
 }
 
-.sidebar-menu li a.active {
-    background: rgba(76, 201, 240, 0.2);
+.nav-item.active {
+    background: rgba(59, 130, 246, 0.15);
     color: white;
-    border-left-color: #4cc9f0;
+    border-left-color: #3b82f6;
 }
 
-.sidebar-menu li a i {
-    width: 25px;
-    font-size: 1.1rem;
-    margin-right: 15px;
+.nav-item i {
+    width: 24px;
+    font-size: 18px;
+    margin-right: 12px;
+    color: #3b82f6;
 }
 
-.sidebar-menu li a span {
+.nav-item span {
     flex: 1;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.sidebar-menu li a .badge {
-    font-size: 0.7rem;
-    padding: 4px 8px;
+.nav-item .badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: #94a3b8;
 }
 
-.menu-divider {
-    padding: 10px 20px;
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.5);
+/* Tool Items */
+.tool-available {
+    opacity: 1;
+}
+
+.tool-coming {
+    opacity: 0.6;
+}
+
+.tool-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 8px;
+}
+
+.tool-tag.semgrep {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.tool-tag.klee,
+.tool-tag.libfuzzer,
+.tool-tag.hybrid {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.coming-soon {
+    font-size: 9px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 10px;
+    color: #f59e0b;
+    font-weight: 600;
 }
 
-.sidebar-menu li a.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* Logout */
+.nav-item.logout {
+    color: #f87171;
 }
 
-.sidebar-menu li a.logout {
-    color: #f72585;
-    margin-top: 20px;
+.nav-item.logout i {
+    color: #f87171;
 }
 
-.sidebar-menu li a.logout:hover {
-    background: rgba(247, 37, 133, 0.1);
+.nav-item.logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-left-color: #ef4444;
+}
+
+/* Footer */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.footer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.footer-item i {
+    color: #10b981;
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #3b82f6;
+    border-radius: 4px;
 }
 </style>
