@@ -1,8 +1,4 @@
-# Create a professional README.md
-cat > README.md << 'EOF'
-# VAST Vulnerability Scanner 🔍
-
-![VAST Logo](app/static/images/vast_logo.png)
+## **VAST**
 
 A comprehensive web-based vulnerability analysis platform for security professionals and developers. Scan source code for security vulnerabilities using multiple analysis techniques.
 
