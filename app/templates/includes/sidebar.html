@@ -1,15 +1,22 @@
 <div class="sidebar">
-    <!-- Logo -->
+    <!-- Logo Section -->
     <div class="sidebar-logo">
-        <i class="fas fa-shield-alt"></i>
-        <span>VAST Scanner</span>
-        <small>v2.0</small>
+        <img src="{{ url_for('static', filename='images/vast_logo.png') }}" alt="VAST Logo" class="logo-img">
+        <div class="logo-text">
+            <h2>VAST</h2>
+        </div>
     </div>
-
-    <!-- User Info -->
-    <div class="user-section">
+    
+    <!-- User Profile Section -->
+    <div class="user-section" onclick="toggleProfileMenu()">
         <div class="user-avatar">
-            <i class="fas fa-user-circle"></i>
+            {% if current_user.profile_pic %}
+            <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile">
+            {% else %}
+            <div class="avatar-placeholder">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            {% endif %}
         </div>
         <div class="user-details">
             <div class="user-name">{{ current_user.username }}</div>
@@ -18,92 +25,188 @@
                 <i class="fas fa-check-circle"></i> Verified
             </div>
         </div>
+        <i class="fas fa-chevron-down profile-arrow"></i>
     </div>
-
-    <!-- Navigation -->
+    
+    <!-- Profile Dropdown -->
+    <div class="profile-dropdown" id="profileDropdown">
+        <a href="#" onclick="openEditProfileModal()">
+            <i class="fas fa-user-edit"></i>
+            <span>Edit Profile</span>
+        </a>
+        <a href="#" onclick="openChangePasswordModal()">
+            <i class="fas fa-key"></i>
+            <span>Change Password</span>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+        </a>
+    </div>
+    
+    <!-- Navigation Menu -->
     <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">MAIN</div>
+        <div class="nav-group">
+            <div class="nav-group-title">MAIN</div>
             
-            <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
             
-            <a href="{{ url_for('projects.create') }}" class="nav-item {% if request.endpoint == 'projects.create' %}active{% endif %}">
+            <a href="{{ url_for('projects.create') }}" class="nav-item">
                 <i class="fas fa-plus-circle"></i>
                 <span>New Scan</span>
             </a>
             
-            <a href="{{ url_for('projects.existing') }}" class="nav-item {% if request.endpoint == 'projects.existing' %}active{% endif %}">
+            <a href="{{ url_for('projects.existing') }}" class="nav-item">
                 <i class="fas fa-folder-open"></i>
                 <span>Projects</span>
-                <span class="badge">{{ current_user.projects|length }}</span>
+                <span class="nav-badge">{{ current_user.projects|length }}</span>
             </a>
             
-            <a href="{{ url_for('dashboard.history') }}" class="nav-item {% if request.endpoint == 'dashboard.history' %}active{% endif %}">
+            <a href="{{ url_for('dashboard.history') }}" class="nav-item">
                 <i class="fas fa-history"></i>
                 <span>History</span>
             </a>
         </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">ANALYSIS TOOLS</div>
+        
+        <div class="nav-group">
+            <div class="nav-group-title">ANALYSIS TOOLS</div>
             
-            <div class="nav-item tool-available">
+            <a href="{{ url_for('projects.create') }}" class="nav-item" onclick="setTool('semgrep')">
                 <i class="fas fa-search"></i>
                 <span>Static Analysis</span>
                 <span class="tool-tag semgrep">Semgrep</span>
-            </div>
+            </a>
             
-            <div class="nav-item tool-coming">
+            <a href="{{ url_for('projects.create') }}" class="nav-item" onclick="setTool('symbolic')">
                 <i class="fas fa-brain"></i>
                 <span>Symbolic Analysis</span>
-                <span class="tool-tag klee">KLEE</span>
-                <span class="coming-soon">SOON</span>
-            </div>
+                <div class="tool-group">
+                    <span class="tool-tag klee">KLEE</span>
+                    <span class="tool-tag angr">Angr</span>
+                    <span class="tool-tag jpf">JPF</span>
+                </div>
+            </a>
             
-            <div class="nav-item tool-coming">
+            <a href="{{ url_for('projects.create') }}" class="nav-item" onclick="setTool('fuzz')">
                 <i class="fas fa-random"></i>
-                <span>Fuzzy Testing</span>
-                <span class="tool-tag libfuzzer">LibFuzzer</span>
-                <span class="coming-soon">SOON</span>
-            </div>
+                <span>Fuzz Testing</span>
+                <div class="tool-group">
+                    <span class="tool-tag libfuzzer">libFuzzer</span>
+                    <span class="tool-tag atheris">Atheris</span>
+                    <span class="tool-tag jazzer">Jazzer</span>
+                </div>
+            </a>
             
-            <div class="nav-item tool-coming">
+            <a href="{{ url_for('projects.create') }}" class="nav-item" onclick="setTool('hybrid')">
                 <i class="fas fa-sync-alt"></i>
                 <span>Hybrid Analysis</span>
-                <span class="tool-tag hybrid">Combined</span>
-                <span class="coming-soon">SOON</span>
-            </div>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-title">ACCOUNT</div>
-            
-            <div class="nav-item" onclick="alert('Settings coming soon!')">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </div>
-            
-            <a href="{{ url_for('auth.logout') }}" class="nav-item logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+                <div class="tool-group">
+                    <span class="tool-tag hybrid">Static+Symbolic+Fuzz</span>
+                </div>
             </a>
         </div>
     </nav>
+    
+    
+        <!-- Admin Section - Only visible to admin users -->
+        {% if current_user.is_admin %}
+        <div class="nav-group">
+            <div class="nav-group-title">ADMIN</div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Admin Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('admin.users') }}" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Manage Users</span>
+            </a>
+            
+            <a href="{{ url_for('admin.projects') }}" class="nav-item">
+                <i class="fas fa-folder-open"></i>
+                <span>Manage Projects</span>
+            </a>
+            
+            <a href="{{ url_for('admin.scans') }}" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>View Scans</span>
+            </a>
+        </div>
+        {% endif %}
 
     <!-- Footer -->
     <div class="sidebar-footer">
-        <div class="footer-item">
-            <i class="fas fa-lock"></i>
+        <div class="security-status">
+            <i class="fas fa-shield-alt"></i>
             <span>Secure Connection</span>
+            <i class="fas fa-lock"></i>
         </div>
     </div>
 </div>
 
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Profile</h3>
+            <span class="close" onclick="closeEditProfileModal()">&times;</span>
+        </div>
+        <form method="POST" action="{{ url_for('auth.update_profile') }}" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" value="{{ current_user.username }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <input type="file" name="profile_pic" accept="image/*">
+                    <small>JPG, PNG or GIF (Max 2MB)</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditProfileModal()">Cancel</button>
+                <button type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Change Password</h3>
+            <span class="close" onclick="closeChangePasswordModal()">&times;</span>
+        </div>
+        <form method="POST" action="{{ url_for('auth.change_password') }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" name="current_password" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" name="new_password" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeChangePasswordModal()">Cancel</button>
+                <button type="submit">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-/* Sidebar Styles */
 .sidebar {
     width: 280px;
     height: 100vh;
@@ -115,10 +218,11 @@
     left: 0;
     top: 0;
     overflow-y: auto;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
 }
 
-/* Logo */
+/* Logo Section */
 .sidebar-logo {
     padding: 24px 20px;
     display: flex;
@@ -127,73 +231,160 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.sidebar-logo i {
-    font-size: 28px;
-    color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
-    padding: 8px;
-    border-radius: 12px;
+.logo-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
 }
 
-.sidebar-logo span {
-    font-size: 20px;
+.logo-text h2 {
+    font-size: 22px;
     font-weight: 700;
     color: white;
-}
-
-.sidebar-logo small {
-    font-size: 11px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2px 8px;
-    border-radius: 20px;
-    color: #94a3b8;
+    margin: 0;
+    letter-spacing: 1px;
 }
 
 /* User Section */
 .user-section {
     padding: 20px;
     display: flex;
-    gap: 15px;
+    align-items: center;
+    gap: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
-.user-avatar i {
-    font-size: 48px;
-    color: #3b82f6;
+.user-section:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.user-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .user-details {
     flex: 1;
+    min-width: 0;
 }
 
 .user-name {
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     color: white;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .user-email {
-    font-size: 12px;
+    font-size: 11px;
     color: #94a3b8;
     margin-bottom: 6px;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .user-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
-    padding: 4px 8px;
+    font-size: 9px;
+    padding: 2px 8px;
     background: rgba(16, 185, 129, 0.2);
     color: #34d399;
     border-radius: 20px;
 }
 
-.user-badge i {
-    font-size: 10px;
+.profile-arrow {
+    font-size: 12px;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+
+.user-section:hover .profile-arrow {
+    transform: rotate(180deg);
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: absolute;
+    top: 105px;
+    left: 20px;
+    right: 20px;
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 8px 0;
+    z-index: 1001;
+    display: none;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-dropdown.show {
+    display: block;
+}
+
+.profile-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.profile-dropdown a:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: white;
+}
+
+.profile-dropdown a i {
+    width: 20px;
+    font-size: 14px;
+    color: #3b82f6;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 6px 0;
+}
+
+.logout-link {
+    color: #f87171 !important;
+}
+
+.logout-link i {
+    color: #f87171 !important;
 }
 
 /* Navigation */
@@ -202,11 +393,11 @@
     padding: 20px 0;
 }
 
-.nav-section {
+.nav-group {
     margin-bottom: 24px;
 }
 
-.nav-section-title {
+.nav-group-title {
     padding: 0 20px 8px;
     font-size: 11px;
     font-weight: 600;
@@ -218,24 +409,17 @@
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
+    padding: 10px 20px;
     color: #94a3b8;
     text-decoration: none;
     transition: all 0.2s ease;
-    border-left: 3px solid transparent;
+    margin: 2px 0;
     cursor: pointer;
 }
 
 .nav-item:hover {
     background: rgba(59, 130, 246, 0.1);
     color: white;
-    border-left-color: #3b82f6;
-}
-
-.nav-item.active {
-    background: rgba(59, 130, 246, 0.15);
-    color: white;
-    border-left-color: #3b82f6;
 }
 
 .nav-item i {
@@ -247,84 +431,159 @@
 
 .nav-item span {
     flex: 1;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
 }
 
-.nav-item .badge {
-    background: rgba(255, 255, 255, 0.1);
+.nav-badge {
+    background: rgba(59, 130, 246, 0.2);
     padding: 2px 8px;
     border-radius: 20px;
-    font-size: 11px;
-    color: #94a3b8;
-}
-
-/* Tool Items */
-.tool-available {
-    opacity: 1;
-}
-
-.tool-coming {
-    opacity: 0.6;
-}
-
-.tool-tag {
     font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin-right: 8px;
-}
-
-.tool-tag.semgrep {
-    background: rgba(59, 130, 246, 0.2);
     color: #60a5fa;
 }
 
-.tool-tag.klee,
-.tool-tag.libfuzzer,
-.tool-tag.hybrid {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-}
-
-.coming-soon {
+.tool-tag {
     font-size: 9px;
-    text-transform: uppercase;
-    color: #f59e0b;
-    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 6px;
 }
 
-/* Logout */
-.nav-item.logout {
-    color: #f87171;
-}
+.tool-tag.semgrep { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.tool-tag.klee { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.tool-tag.angr { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+.tool-tag.jpf { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.tool-tag.libfuzzer { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+.tool-tag.atheris { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+.tool-tag.jazzer { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+.tool-tag.hybrid { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
 
-.nav-item.logout i {
-    color: #f87171;
-}
-
-.nav-item.logout:hover {
-    background: rgba(239, 68, 68, 0.1);
-    border-left-color: #ef4444;
+.tool-group {
+    display: flex;
+    gap: 4px;
 }
 
 /* Footer */
 .sidebar-footer {
-    padding: 20px;
+    padding: 16px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.2);
 }
 
-.footer-item {
+.security-status {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 11px;
     color: #64748b;
 }
 
-.footer-item i {
-    color: #10b981;
+.security-status i:first-child { color: #3b82f6; }
+.security-status i:last-child { color: #10b981; }
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #1e293b;
+    margin: 10% auto;
+    width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: white;
+    margin: 0;
+}
+
+.modal-header .close {
+    color: #94a3b8;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.modal-header .close:hover {
+    color: white;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    color: #cbd5e1;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: white;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.form-group small {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-footer button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-footer button:first-child {
+    background: #334155;
+    color: white;
+}
+
+.modal-footer button:last-child {
+    background: #3b82f6;
+    color: white;
 }
 
 /* Scrollbar */
@@ -341,3 +600,52 @@
     border-radius: 4px;
 }
 </style>
+
+<script>
+function toggleProfileMenu() {
+    const menu = document.getElementById('profileDropdown');
+    menu.classList.toggle('show');
+}
+
+function openEditProfileModal() {
+    document.getElementById('editProfileModal').style.display = 'block';
+    document.getElementById('profileDropdown').classList.remove('show');
+}
+
+function closeEditProfileModal() {
+    document.getElementById('editProfileModal').style.display = 'none';
+}
+
+function openChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'block';
+    document.getElementById('profileDropdown').classList.remove('show');
+}
+
+function closeChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+function setTool(tool) {
+    const scannerType = document.getElementById('scannerType');
+    if (scannerType) {
+        scannerType.value = tool;
+    }
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const editModal = document.getElementById('editProfileModal');
+    const passModal = document.getElementById('changePasswordModal');
+    const profileMenu = document.getElementById('profileDropdown');
+    
+    if (event.target == editModal) {
+        editModal.style.display = 'none';
+    }
+    if (event.target == passModal) {
+        passModal.style.display = 'none';
+    }
+    if (profileMenu && !event.target.closest('.user-section') && !event.target.closest('.profile-dropdown')) {
+        profileMenu.classList.remove('show');
+    }
+}
+</script>

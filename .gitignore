@@ -6,18 +6,12 @@ __pycache__/
 .Python
 venv/
 env/
-.venv/
 ENV/
-env.bak/
-venv.bak/
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
-
-# Uploads
-app/uploads/
-app/reports/
 
 # IDE
 .vscode/
@@ -25,52 +19,19 @@ app/reports/
 *.swp
 *.swo
 
+# Logs
+*.log
+vast.log
+
+# Uploads and Reports
+app/uploads/
+app/reports/
+instance/
+
+# Environment
+.env
+.env.local
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Temp files
-*.tmp
-*.temp
-
-# Virtual environment
-pyvenv.cfg
-
-# Python packaging
-*.egg-info/
-dist/
-build/
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# Coverage reports
-.coverage
-htmlcov/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# Environments
-.env
-.venv
-
-# SQLite databases
-*.db
-*.sqlite3
-
-# Flask stuff
-instance/
-
-# Semgrep
-.semgrep/

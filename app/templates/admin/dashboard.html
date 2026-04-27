@@ -1,0 +1,163 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Admin Dashboard - VAST{% endblock %}
+
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Users</h6>
+                            <h2 class="mb-0">{{ total_users }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Projects</h6>
+                            <h2 class="mb-0">{{ total_projects }}</h2>
+                        </div>
+                        <i class="fas fa-folder-open fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Scans</h6>
+                            <h2 class="mb-0">{{ total_scans }}</h2>
+                        </div>
+                        <i class="fas fa-chart-line fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vulnerability Stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Vulnerability Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-danger text-white rounded">
+                                <h3>{{ vuln_stats.critical }}</h3>
+                                <small>CRITICAL</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-warning text-white rounded">
+                                <h3>{{ vuln_stats.high }}</h3>
+                                <small>HIGH</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-info text-white rounded">
+                                <h3>{{ vuln_stats.medium }}</h3>
+                                <small>MEDIUM</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-secondary text-white rounded">
+                                <h3>{{ vuln_stats.low }}</h3>
+                                <small>LOW</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-light text-dark rounded">
+                                <h3>{{ vuln_stats.info }}</h3>
+                                <small>INFO</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Users -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Recent Users</h5>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users[:5] %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Scans -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Recent Scans</h5>
+                    <a href="{{ url_for('admin.scans') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Severity</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for scan in recent_scans[:5] %}
+                            <tr>
+                                <td>{{ scan.tool_name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if scan.severity == 'critical' else 'warning' if scan.severity == 'high' else 'info' if scan.severity == 'medium' else 'secondary' }}">
+                                        {{ scan.severity|upper }}
+                                    </span>
+                                </td>
+                                <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

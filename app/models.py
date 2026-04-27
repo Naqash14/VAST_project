@@ -12,10 +12,13 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
-    is_2fa_enabled = db.Column(db.Boolean, default=False)  # ⚠️ ADD THIS LINE
+    is_2fa_enabled = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)  # ⚠️ Make sure this line exists
+    profile_pic = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-        
-    # Relationships
+    last_login = db.Column(db.DateTime, nullable=True)
+    login_attempts = db.Column(db.Integer, default=0)
+    
     projects = db.relationship('Project', backref='owner', lazy=True, cascade='all, delete-orphan')
     otps = db.relationship('OTP', backref='user', lazy=True, cascade='all, delete-orphan')
     

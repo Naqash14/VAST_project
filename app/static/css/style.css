@@ -225,3 +225,143 @@ main {
 .progress-bar {
     border-radius: 10px;
 }
+/* Code Input Styling - Light Theme */
+.code-input,
+textarea.code-input,
+#codeInput {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
+    font-family: 'Courier New', 'Consolas', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+.code-input:focus,
+textarea.code-input:focus,
+#codeInput:focus {
+    background-color: #ffffff !important;
+    border-color: #4361ee !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1) !important;
+}
+
+/* Code preview in scan results */
+.code-snippet {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    overflow-x: auto !important;
+}
+
+.code-snippet pre {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    margin: 0 !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 13px !important;
+}
+
+/* Severity Colors - Enhanced */
+.severity-critical {
+    background: linear-gradient(135deg, #dc3545, #b91c1c);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-high {
+    background: linear-gradient(135deg, #fd7e14, #ea580c);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-medium {
+    background: linear-gradient(135deg, #ffc107, #d97706);
+    color: #212529;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-low {
+    background: linear-gradient(135deg, #6c757d, #4b5563);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+/* Stats cards with gradients */
+.stats-card.critical {
+    background: linear-gradient(135deg, #dc3545, #b91c1c);
+}
+
+.stats-card.high {
+    background: linear-gradient(135deg, #fd7e14, #ea580c);
+}
+
+.stats-card.medium {
+    background: linear-gradient(135deg, #ffc107, #d97706);
+    color: #212529;
+}
+
+.stats-card.low {
+    background: linear-gradient(135deg, #6c757d, #4b5563);
+}
+
+/* Severity Colors - Enhanced */
+.severity-critical {
+    background: linear-gradient(135deg, #dc3545, #b91c1c);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-high {
+    background: linear-gradient(135deg, #fd7e14, #ea580c);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-medium {
+    background: linear-gradient(135deg, #ffc107, #d97706);
+    color: #212529;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+.severity-low {
+    background: linear-gradient(135deg, #6c757d, #4b5563);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+}
+
+/* Stats cards with gradients */
+.stats-card.critical {
+    background: linear-gradient(135deg, #dc3545, #b91c1c);
+}
+
+.stats-card.high {
+    background: linear-gradient(135deg, #fd7e14, #ea580c);
+}
+
+.stats-card.medium {
+    background: linear-gradient(135deg, #ffc107, #d97706);
+    color: #212529;
+}
+
+.stats-card.low {
+    background: linear-gradient(135deg, #6c757d, #4b5563);
+}

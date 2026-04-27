@@ -99,12 +99,13 @@ def create_app():
             logger.error(f"❌ Database error: {e}")
     
     # Register blueprints
-    from app.routes import auth, dashboard, projects
+    from app.routes import auth, dashboard, projects, admin
     
     print("🔵 Registering blueprints...")
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
+    app.register_blueprint(admin.bp)
     print("✅ Blueprints registered")
     
     return app
