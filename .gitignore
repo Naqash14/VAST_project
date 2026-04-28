@@ -4,9 +4,24 @@ __pycache__/
 *$py.class
 *.so
 .Python
-venv/
 env/
+venv/
 ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Database
 *.db
@@ -18,20 +33,43 @@ ENV/
 .idea/
 *.swp
 *.swo
+*~
+.DS_Store
 
-# Logs
-*.log
-vast.log
-
-# Uploads and Reports
+# Project specific
 app/uploads/
 app/reports/
+*.log
+vast.db
 instance/
 
 # Environment
 .env
 .env.local
+.env.*.local
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # OS
-.DS_Store
 Thumbs.db
+.DS_Store
