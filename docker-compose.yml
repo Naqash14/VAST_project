@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  vast-scanner:
+    build: .
+    container_name: vast-scanner
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+    volumes:
+      - ./app/uploads:/app/app/uploads
+      - ./app/reports:/app/app/reports
+      - ./vast.db:/app/vast.db
+    restart: unless-stopped
+
