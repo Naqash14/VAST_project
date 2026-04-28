@@ -1,11 +1,4 @@
-# Navigate to your project
-cd ~/vast-vulnerability-scanner
 
-# Backup old README
-cp README.md README.md.backup
-
-# Create new README
-cat > README.md << 'EOF'
 # 🔐 VAST - Vulnerability Analysis Security Tool
 
 A comprehensive web-based vulnerability analysis platform that combines **static analysis**, **symbolic execution**, and **fuzz testing** to detect security vulnerabilities in C/C++, Python, and Java code.
