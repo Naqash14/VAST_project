@@ -18,11 +18,11 @@ python-dotenv==1.0.0
 reportlab==4.0.4
 fpdf2==2.7.5
 
-# Analysis Tools - Using versions that work
+# Analysis Tools
 semgrep==1.40.0
-angr==9.2.102
+angr==9.2.207
 atheris==3.0.0
-hypothesis==6.151.9
+hypothesis==6.36.0
 
 # AI & API
 groq==1.5.0
