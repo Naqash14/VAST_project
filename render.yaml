@@ -3,7 +3,6 @@ services:
     name: vast-scanner
     env: python
     buildCommand: |
-      apt-get update && apt-get install -y libpq-dev gcc python3-dev
       pip install --no-cache-dir -r requirements.txt
       python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all(); print('DB created')"
     startCommand: gunicorn run:app
@@ -13,16 +12,10 @@ services:
       - key: FLASK_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: vast_db
-          property: connectionString
+        value: sqlite:///vast.db
       - key: GROQ_API_KEY
         sync: false
       - key: MAIL_USERNAME
         sync: false
       - key: MAIL_PASSWORD
         sync: false
-
-databases:
-  - name: vast_db
-    plan: free
