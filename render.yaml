@@ -2,7 +2,9 @@ services:
   - type: web
     name: vast-scanner
     env: python
+    runtime: python-3.11
     buildCommand: |
+      pip install --upgrade pip
       pip install --no-cache-dir -r requirements.txt
       python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all(); print('✅ Database created')"
     startCommand: gunicorn run:app
