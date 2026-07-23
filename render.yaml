@@ -2,8 +2,10 @@ services:
   - type: web
     name: vast-scanner
     env: python
-    plan: free  # ⚠️ ADD THIS - Forces free tier
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      apt-get update && apt-get install -y libpq-dev gcc python3-dev
+      pip install --no-cache-dir -r requirements.txt
+      python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all(); print('DB created')"
     startCommand: gunicorn run:app
     envVars:
       - key: SECRET_KEY
@@ -20,11 +22,7 @@ services:
         sync: false
       - key: MAIL_PASSWORD
         sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
 
 databases:
   - name: vast_db
-    plan: free  # ⚠️ ADD THIS - Forces free database
-    databaseName: vast_scanner
-    user: vast_user
+    plan: free
