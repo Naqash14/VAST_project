@@ -19,9 +19,9 @@ psycopg2-binary==2.9.9
 reportlab==4.0.4
 fpdf2==2.7.5
 
-# Analysis Tools
+# Analysis Tools (KEEP ALL)
 semgrep==1.40.0
-angr==9.2.207
+angr==9.2.102
 atheris==3.0.0
 hypothesis==6.151.9
 
