@@ -101,11 +101,11 @@ def verify_otp():
                     
                     session.pop('pending_user', None)
                     
-                    flash('Email verified! Please login to continue.', 'success')
+                    flash('Email verified! You can now login.', 'success')
                     return redirect(url_for('auth.login'))
                     
                 except Exception as e:
-                    print(f"Error creating user: {e}")
+                    print(f"❌ Error: {e}")
                     db.session.rollback()
                     flash('Error creating account. Try again.', 'error')
                     return redirect(url_for('auth.signup'))
@@ -147,16 +147,12 @@ def login():
         
         user = User.query.filter_by(email=email).first()
         
-        if not user:
-            flash('Email not registered. Please sign up first.', 'error')
-            return redirect(url_for('auth.login'))
-        
-        if not user.check_password(password):
-            flash('Incorrect password. Please try again.', 'error')
+        if not user or not user.check_password(password):
+            flash('Invalid email or password', 'error')
             return redirect(url_for('auth.login'))
         
         if not user.is_verified:
-            flash('Please verify your email first.', 'warning')
+            flash('Please verify your email first', 'warning')
             return redirect(url_for('auth.verify_otp', email=email))
         
         login_user(user, remember=bool(remember))
@@ -170,14 +166,13 @@ def login():
 @login_required
 def update_profile():
     username = request.form.get('username')
-    
     if not username:
-        flash('Username is required', 'error')
+        flash('Username required', 'error')
         return redirect(url_for('dashboard.index'))
     
     existing = User.query.filter(User.id != current_user.id, User.username == username).first()
     if existing:
-        flash('Username already taken', 'error')
+        flash('Username taken', 'error')
         return redirect(url_for('dashboard.index'))
     
     current_user.username = username
@@ -188,12 +183,11 @@ def update_profile():
             filename = secure_filename(f"{current_user.id}_{file.filename}")
             upload_folder = os.path.join('app', 'static', 'uploads')
             os.makedirs(upload_folder, exist_ok=True)
-            filepath = os.path.join(upload_folder, filename)
-            file.save(filepath)
+            file.save(os.path.join(upload_folder, filename))
             current_user.profile_pic = filename
     
     db.session.commit()
-    flash('Profile updated successfully!', 'success')
+    flash('Profile updated!', 'success')
     return redirect(url_for('dashboard.index'))
 
 # ========== CHANGE PASSWORD ==========
@@ -209,17 +203,17 @@ def change_password():
         return redirect(url_for('dashboard.index'))
     
     if new_pwd != confirm_pwd:
-        flash('New passwords do not match', 'error')
+        flash('Passwords do not match', 'error')
         return redirect(url_for('dashboard.index'))
     
     strength, msg, _ = check_password_strength(new_pwd)
     if strength == 'weak':
-        flash('Password too weak. Use a stronger password.', 'error')
+        flash('Password too weak', 'error')
         return redirect(url_for('dashboard.index'))
     
     current_user.set_password(new_pwd)
     db.session.commit()
-    flash('Password changed successfully!', 'success')
+    flash('Password changed!', 'success')
     return redirect(url_for('dashboard.index'))
 
 # ========== LOGOUT ==========

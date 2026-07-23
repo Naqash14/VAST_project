@@ -12,7 +12,6 @@
         gap: 20px;
         margin: 30px 0;
     }
-    
     .scan-option {
         background: white;
         border-radius: 12px;
@@ -23,123 +22,33 @@
         transition: all 0.3s ease;
         height: 100%;
     }
-    
-    .scan-option:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-color: #4361ee;
-    }
-    
-    .scan-option.active {
-        border-color: #4361ee;
-        background: rgba(67, 97, 238, 0.05);
-    }
-    
-    .scan-icon {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 15px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: white;
-    }
-    
+    .scan-option:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: #4361ee; }
+    .scan-option.active { border-color: #4361ee; background: rgba(67,97,238,0.05); }
+    .scan-icon { width: 60px; height: 60px; margin: 0 auto 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; }
     .scan-option:nth-child(1) .scan-icon { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
     .scan-option:nth-child(2) .scan-icon { background: linear-gradient(135deg, #f8961e, #e85d04); }
     .scan-option:nth-child(3) .scan-icon { background: linear-gradient(135deg, #10b981, #059669); }
     .scan-option:nth-child(4) .scan-icon { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    
-    .scan-title {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #2c3e50;
-    }
-    
-    .scan-desc {
-        color: #6c757d;
-        font-size: 0.75rem;
-        margin-bottom: 12px;
-        line-height: 1.4;
-    }
-    
-    .scan-status {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-    
-    .status-available {
-        background: #d1fae5;
-        color: #065f46;
-    }
-    
-    .tool-badge-group {
-        display: flex;
-        justify-content: center;
-        gap: 6px;
-        margin-top: 12px;
-        flex-wrap: wrap;
-    }
-    
-    .tool-badge {
-        font-size: 8px;
-        padding: 2px 6px;
-        border-radius: 10px;
-    }
-    
+    .scan-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #2c3e50; }
+    .scan-desc { color: #6c757d; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.4; }
+    .scan-status { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    .status-available { background: #d1fae5; color: #065f46; }
+    .tool-badge-group { display: flex; justify-content: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .tool-badge { font-size: 9px; padding: 2px 8px; border-radius: 12px; }
     .tool-badge.semgrep { background: #3b82f6; color: white; }
     .tool-badge.klee { background: #10b981; color: white; }
     .tool-badge.angr { background: #8b5cf6; color: white; }
     .tool-badge.jpf { background: #f59e0b; color: white; }
-    .tool-badge.libfuzzer { background: #ef4444; color: white; }
+    .tool-badge.fuzz { background: #ec4899; color: white; }
     .tool-badge.hybrid { background: #8b5cf6; color: white; }
-    
-    .code-input-section {
-        background: white;
-        border-radius: 12px;
-        padding: 30px;
-        margin-top: 30px;
-        border: 1px solid #e9ecef;
-    }
-    
-    .code-input {
-        width: 100%;
-        min-height: 350px;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        resize: vertical;
-        background: #f8f9fa;
-        color: #212529;
-    }
-    
-    .file-upload-area {
-        border: 2px dashed #ddd;
-        border-radius: 8px;
-        padding: 40px;
-        text-align: center;
-        background: #f8f9fa;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .language-warning {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 8px;
-        padding: 12px 15px;
-        margin: 15px 0;
-        color: #856404;
-        display: none;
-    }
+    .code-input-section { background: white; border-radius: 12px; padding: 30px; margin-top: 30px; border: 1px solid #e9ecef; }
+    .code-input { width: 100%; min-height: 350px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical; background: #1e1e1e; color: #d4d4d4; }
+    .file-upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 40px; text-align: center; background: #f8f9fa; cursor: pointer; transition: all 0.3s ease; }
+    .file-upload-area:hover { border-color: #4361ee; background: rgba(67,97,238,0.05); }
+    .file-upload-area i { font-size: 3rem; color: #6c757d; margin-bottom: 15px; }
+    .language-warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 12px 15px; margin: 15px 0; color: #856404; display: none; }
+    @media (max-width: 1000px) { .scan-options { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .scan-options { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
@@ -149,9 +58,7 @@
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-plus-circle me-2"></i>Create New Security Scan
-                    </h5>
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Security Scan</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('projects.create') }}" enctype="multipart/form-data" id="scanForm">
@@ -159,29 +66,26 @@
                         
                         <div class="mb-4">
                             <label for="projectName" class="form-label">Project Name *</label>
-                            <input type="text" class="form-control" id="projectName" name="project_name" 
-                                   placeholder="e.g., WebApp Security Analysis" required>
+                            <input type="text" class="form-control" id="projectName" name="project_name" placeholder="e.g., WebApp Security Analysis" required>
                         </div>
                         
                         <div class="mb-4">
                             <label class="form-label">Select Analysis Tool</label>
                             <div class="scan-options">
-                                <!-- Static Analysis -->
+                                <!-- Static -->
                                 <div class="scan-option active" onclick="selectTool('semgrep')">
                                     <div class="scan-icon"><i class="fas fa-search"></i></div>
                                     <div class="scan-title">Static Analysis</div>
                                     <div class="scan-desc">Pattern-based vulnerability detection</div>
                                     <span class="scan-status status-available">Available</span>
-                                    <div class="tool-badge-group">
-                                        <span class="tool-badge semgrep">Semgrep</span>
-                                    </div>
+                                    <div class="tool-badge-group"><span class="tool-badge semgrep">Semgrep</span></div>
                                 </div>
                                 
-                                <!-- Symbolic Analysis -->
+                                <!-- Symbolic -->
                                 <div class="scan-option" onclick="selectTool('symbolic')">
                                     <div class="scan-icon"><i class="fas fa-brain"></i></div>
                                     <div class="scan-title">Symbolic Analysis</div>
-                                    <div class="scan-desc">Deep path exploration & memory issues</div>
+                                    <div class="scan-desc">Deep path exploration & concurrency bugs</div>
                                     <span class="scan-status status-available">Available</span>
                                     <div class="tool-badge-group">
                                         <span class="tool-badge klee">KLEE</span>
@@ -190,29 +94,22 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Fuzz Testing -->
+                                <!-- Fuzz -->
                                 <div class="scan-option" onclick="selectTool('fuzz')">
                                     <div class="scan-icon"><i class="fas fa-random"></i></div>
                                     <div class="scan-title">Fuzz Testing</div>
-                                    <div class="scan-desc">Edge case detection & crash testing</div>
+                                    <div class="scan-desc">Automated edge-case testing</div>
                                     <span class="scan-status status-available">Available</span>
-                                    <div class="tool-badge-group">
-                                        <span class="tool-badge libfuzzer">libFuzzer</span>
-                                    </div>
+                                    <div class="tool-badge-group"><span class="tool-badge fuzz">libFuzzer</span></div>
                                 </div>
                                 
-                                <!-- Hybrid Analysis -->
+                                <!-- Hybrid -->
                                 <div class="scan-option" onclick="selectTool('hybrid')">
                                     <div class="scan-icon"><i class="fas fa-sync-alt"></i></div>
                                     <div class="scan-title">Hybrid Analysis</div>
-                                    <div class="scan-desc">All techniques combined for comprehensive assessment</div>
+                                    <div class="scan-desc">All techniques combined</div>
                                     <span class="scan-status status-available">Available</span>
-                                    <div class="tool-badge-group">
-                                        <span class="tool-badge semgrep">Semgrep</span>
-                                        <span class="tool-badge klee">KLEE</span>
-                                        <span class="tool-badge libfuzzer">libFuzzer</span>
-                                        <span class="tool-badge hybrid">Hybrid</span>
-                                    </div>
+                                    <div class="tool-badge-group"><span class="tool-badge hybrid">All Tools</span></div>
                                 </div>
                             </div>
                         </div>
@@ -227,11 +124,10 @@
                             
                             <div class="mb-4">
                                 <label for="codeInput" class="form-label">Paste Source Code</label>
-                                <textarea class="code-input" id="codeInput" name="code_content" 
-                                          placeholder="Paste your source code here..."></textarea>
+                                <textarea class="code-input" id="codeInput" name="code_content" placeholder="Paste your source code here..."></textarea>
                                 <div class="form-text mt-2">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Supported languages: <strong>Python (.py)</strong>, <strong>C/C++ (.c/.cpp)</strong>, <strong>Java (.java)</strong>
+                                    Supported: <strong>Python (.py)</strong>, <strong>C/C++ (.c/.cpp)</strong>, <strong>Java (.java)</strong>
                                 </div>
                             </div>
                             
@@ -243,20 +139,15 @@
                                     <i class="fas fa-cloud-upload-alt"></i>
                                     <h5>Click to upload or drag and drop</h5>
                                     <p class="text-muted">Maximum file size: 16MB</p>
-                                    <input type="file" id="fileInput" name="code_file" style="display: none;" 
-                                           accept=".py,.c,.cpp,.h,.hpp,.java">
+                                    <input type="file" id="fileInput" name="code_file" style="display: none;" accept=".py,.c,.cpp,.h,.hpp,.java">
                                     <div id="fileName" class="file-info">No file selected</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary" id="submitBtn">
-                                <i class="fas fa-play me-2"></i>Start Scan
-                            </button>
+                            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-play me-2"></i>Start Scan</button>
                         </div>
                     </form>
                 </div>
@@ -266,162 +157,69 @@
 </div>
 
 <script>
-    let selectedTool = 'semgrep';
-    
-    function selectTool(tool) {
-        // Remove active class from all options
-        document.querySelectorAll('.scan-option').forEach(opt => {
-            opt.classList.remove('active');
-        });
-        // Add active class to clicked option
-        event.currentTarget.classList.add('active');
-        selectedTool = tool;
-        document.getElementById('scannerType').value = tool;
-        
-        console.log('Selected tool:', tool);
-        
-        // Optional: Show info for hybrid
-        if (tool === 'hybrid') {
-            console.log('Hybrid Analysis selected - will run Static + Symbolic + Fuzz');
-        }
-    }
-    
-    function detectLanguage(code) {
-        const codeLower = code.toLowerCase();
-        if (codeLower.includes('#include') || codeLower.includes('int main') || codeLower.includes('printf')) {
-            return 'c';
-        }
-        if (codeLower.includes('import java.') || codeLower.includes('public class')) {
-            return 'java';
-        }
-        if (codeLower.includes('import ') || codeLower.includes('def ') || codeLower.includes('print(')) {
-            return 'python';
-        }
-        return 'unknown';
-    }
-    
-    function validateLanguage(code) {
-        const lang = detectLanguage(code);
-        const warningDiv = document.getElementById('languageWarning');
-        const warningMsg = document.getElementById('warningMessage');
-        
-        if (code.trim() === '') {
-            warningDiv.style.display = 'none';
-            return true;
-        }
-        
-        if (lang === 'unknown') {
-            warningMsg.innerHTML = '⚠️ Warning: Could not detect language. Only Python, C/C++, and Java are fully supported.';
-            warningDiv.style.display = 'block';
-            return false;
-        } else {
-            const langNames = { 'python': 'Python', 'c': 'C/C++', 'java': 'Java' };
-            warningMsg.innerHTML = `✅ Detected language: ${langNames[lang]}. Analysis will use appropriate tools.`;
-            warningDiv.style.background = '#d1fae5';
-            warningDiv.style.color = '#065f46';
-            warningDiv.style.borderColor = '#10b981';
-            warningDiv.style.display = 'block';
-            return true;
-        }
-    }
-    
-    const fileInput = document.getElementById('fileInput');
-    const codeInput = document.getElementById('codeInput');
-    const fileName = document.getElementById('fileName');
-    
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const ext = '.' + file.name.split('.').pop().toLowerCase();
-            const supportedExts = ['.py', '.c', '.cpp', '.h', '.hpp', '.java'];
-            
-            if (supportedExts.includes(ext)) {
-                fileName.innerHTML = `<strong>${file.name}</strong> - ${file.size / 1024 < 1024 ? (file.size / 1024).toFixed(1) + ' KB' : (file.size / (1024*1024)).toFixed(1) + ' MB'}`;
-                document.getElementById('uploadArea').style.borderColor = '#10b981';
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    codeInput.value = e.target.result;
-                    validateLanguage(e.target.result);
-                };
-                reader.readAsText(file);
-            } else {
-                fileName.innerHTML = `<strong>${file.name}</strong> - ⚠️ Unsupported file type`;
-                document.getElementById('uploadArea').style.borderColor = '#f59e0b';
-                validateLanguage(codeInput.value);
-            }
-        }
-    });
-    
-    codeInput.addEventListener('input', function() {
-        validateLanguage(this.value);
-    });
-    
-    document.getElementById('scanForm').addEventListener('submit', function(e) {
-        const projectName = document.getElementById('projectName').value.trim();
-        const code = codeInput.value.trim();
-        const file = fileInput.files[0];
-        
-        if (!projectName) {
-            e.preventDefault();
-            alert('Please enter a project name');
-            return;
-        }
-        
-        if (!code && !file) {
-            e.preventDefault();
-            alert('Please either paste code or upload a file');
-            return;
-        }
-        
-        // Check language support
-        const detectedLang = detectLanguage(code || (file ? 'temp' : ''));
-        if (detectedLang === 'unknown') {
-            e.preventDefault();
-            alert('Unsupported language!\n\nVAST currently supports:\n- Python (.py)\n- C/C++ (.c, .cpp, .h, .hpp)\n- Java (.java)\n\nPlease upload or paste code in a supported language.');
-            return;
-        }
-        
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating project...';
-        submitBtn.disabled = true;
-    });
-    
-    document.getElementById('projectName').focus();
-</script>
-{% endblock %}
-
-<script>
-// Add language validation before form submission
-document.getElementById('scanForm').addEventListener('submit', function(e) {
-    const code = document.getElementById('codeInput').value;
-    const language = detectLanguage(code);
-    const supported = ['c', 'python', 'java'];
-    
-    if (code.trim() !== '' && !supported.includes(language)) {
-        e.preventDefault();
-        alert(`Unsupported language detected: ${language}\\n\\nOnly C/C++, Python, and Java are supported.\\n\\nPlease use supported languages for analysis.`);
-        return false;
-    }
-});
-
+let selectedTool = 'semgrep';
+function selectTool(tool) {
+    document.querySelectorAll('.scan-option').forEach(opt => opt.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    selectedTool = tool;
+    document.getElementById('scannerType').value = tool;
+}
 function detectLanguage(code) {
-    const codeLower = code.toLowerCase();
-    if (codeLower.includes('#include') || codeLower.includes('int main') || codeLower.includes('printf')) {
-        return 'c';
-    }
-    if (codeLower.includes('import java.') || codeLower.includes('public class')) {
-        return 'java';
-    }
-    if (codeLower.includes('import ') || codeLower.includes('def ') || codeLower.includes('print(')) {
-        return 'python';
-    }
-    if (codeLower.includes('<?php') || codeLower.includes('echo') || codeLower.includes('$')) {
-        return 'php';
-    }
-    if (codeLower.includes('function') && codeLower.includes('{') && codeLower.includes('}')) {
-        return 'javascript';
-    }
+    const c = code.toLowerCase();
+    if (c.includes('#include') || c.includes('int main') || c.includes('printf')) return 'c';
+    if (c.includes('import java.') || c.includes('public class')) return 'java';
+    if (c.includes('import ') || c.includes('def ') || c.includes('print(')) return 'python';
     return 'unknown';
 }
+function validateLanguage(code) {
+    const lang = detectLanguage(code);
+    const wd = document.getElementById('languageWarning');
+    const wm = document.getElementById('warningMessage');
+    if (!code.trim()) { wd.style.display = 'none'; return true; }
+    if (lang === 'unknown') {
+        wm.innerHTML = '⚠️ Could not detect language. Only Python, C/C++, and Java are supported.';
+        wd.style.display = 'block';
+        return false;
+    } else {
+        const names = { 'python': 'Python', 'c': 'C/C++', 'java': 'Java' };
+        wm.innerHTML = `✅ Detected: ${names[lang]}`;
+        wd.style.background = '#d1fae5';
+        wd.style.color = '#065f46';
+        wd.style.borderColor = '#10b981';
+        wd.style.display = 'block';
+        return true;
+    }
+}
+const fileInput = document.getElementById('fileInput');
+const codeInput = document.getElementById('codeInput');
+const fileName = document.getElementById('fileName');
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        const supported = ['.py', '.c', '.cpp', '.h', '.hpp', '.java'];
+        if (supported.includes(ext)) {
+            fileName.innerHTML = `<strong>${file.name}</strong> - ${(file.size/1024).toFixed(1)} KB`;
+            document.getElementById('uploadArea').style.borderColor = '#10b981';
+            const reader = new FileReader();
+            reader.onload = function(e) { codeInput.value = e.target.result; validateLanguage(e.target.result); };
+            reader.readAsText(file);
+        } else {
+            fileName.innerHTML = `<strong>${file.name}</strong> - ⚠️ Unsupported file type`;
+            document.getElementById('uploadArea').style.borderColor = '#f59e0b';
+        }
+    }
+});
+codeInput.addEventListener('input', function() { validateLanguage(this.value); });
+document.getElementById('scanForm').addEventListener('submit', function(e) {
+    const projectName = document.getElementById('projectName').value.trim();
+    const code = codeInput.value.trim();
+    const file = fileInput.files[0];
+    if (!projectName) { e.preventDefault(); alert('Enter project name'); return; }
+    if (!code && !file) { e.preventDefault(); alert('Paste code or upload a file'); return; }
+    document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    document.getElementById('submitBtn').disabled = true;
+});
+document.getElementById('projectName').focus();
 </script>
+{% endblock %}

@@ -1,0 +1,33 @@
+<div class="card mt-4 border-0" style="background: linear-gradient(135deg, #f0f4ff, #ffffff);">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="fas fa-robot me-2"></i>AI-Assisted Analysis
+            {% if result.ai_analysis.summary.is_fallback %}
+            <span class="badge bg-secondary ms-2">Fallback mode</span>
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <p class="mb-3"><strong>Priority guidance:</strong> {{ result.ai_analysis.summary.overall_priority }}</p>
+        {% set priority_class = {'Critical': 'danger', 'High': 'warning', 'Medium': 'info', 'Low': 'secondary'} %}
+        {% for ai_f in result.ai_analysis.findings %}
+        <div class="finding-card {{ ai_f.priority|lower }}">
+            <div>
+                <span class="severity-badge bg-{{ priority_class.get(ai_f.priority, 'secondary') }}">
+                    {{ ai_f.priority|upper }}
+                </span>
+                <span class="badge bg-dark ms-1">CVSS {{ ai_f.cvss_score }}</span>
+                <strong class="ms-2">{{ ai_f.message }}</strong>
+                {% if ai_f.line %}<small class="text-muted ms-2">Line {{ ai_f.line }}</small>{% endif %}
+            </div>
+            <div class="mt-2">
+                <i class="fas fa-wrench text-primary me-1"></i>
+                <strong>Recommendation:</strong> {{ ai_f.remediation }}
+            </div>
+            <div class="mt-1">
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                <strong>Exploitability:</strong> {{ ai_f.exploitability }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

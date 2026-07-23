@@ -1,0 +1,82 @@
+{% extends "layout/base.html" %}
+
+{% block title %}View Project - Admin{% endblock %}
+
+{% block page_title %}Project: {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Project Details</h5>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.manage_projects') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+                <form method="POST" action="{{ url_for('admin.delete_project_admin', project_id=project.id) }}" 
+                      style="display:inline;" 
+                      onsubmit="return confirm('Delete this project?');">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Owner:</strong> {{ user.username }} ({{ user.email }})</p>
+                    <p><strong>Created:</strong> {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Updated:</strong> {{ project.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    {% if project.filename %}
+                    <p><strong>File:</strong> {{ project.filename }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Total Scans:</strong> {{ project.scan_results|length }}</p>
+                    <p><strong>Code Length:</strong> {{ project.code_content|length }} characters</p>
+                </div>
+            </div>
+
+            <!-- Code Preview -->
+            <h6 class="mt-4">Code Preview</h6>
+            <div class="code-snippet" style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+                <pre class="mb-0">{{ project.code_content[:1000] }}{% if project.code_content|length > 1000 %}... (truncated){% endif %}</pre>
+            </div>
+
+            <!-- Scan Results -->
+            {% if project.scan_results %}
+            <h6 class="mt-4">Scan History</h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Severity</th>
+                            <th>Findings</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in project.scan_results %}
+                        <tr>
+                            <td>{{ scan.tool_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if scan.severity == 'critical' else 'warning' if scan.severity == 'high' else 'info' if scan.severity == 'medium' else 'secondary' }}">
+                                    {{ scan.severity|upper }}
+                                </span>
+                            </td>
+                            <td>{{ scan.findings|length if scan.findings else 0 }}</td>
+                            <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

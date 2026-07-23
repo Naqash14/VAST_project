@@ -1,46 +1,68 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Admin - Projects{% endblock %}
+{% block title %}All Projects - Admin{% endblock %}
 
-{% block page_title %}Project Management{% endblock %}
+{% block page_title %}All Projects{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="card shadow">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">All Projects</h5>
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>All Projects</h5>
         </div>
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Project Name</th>
-                        <th>User</th>
-                        <th>Scans</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for project in projects %}
-                    <tr>
-                        <td>{{ project.id }}</td>
-                        <td>{{ project.project_name }}</td>
-                        <td>{{ project.owner.username }}</td>
-                        <td>{{ project.scan_results|length }}</td>
-                        <td>{{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.delete_project', project_id=project.id) }}" onsubmit="return confirm('Delete this project?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            {% if projects %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Project Name</th>
+                            <th>Owner</th>
+                            <th>Scans</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td>{{ project.id }}</td>
+                            <td>
+                                <strong>{{ project.project_name }}</strong>
+                                {% if project.filename %}
+                                <small class="text-muted d-block">File: {{ project.filename }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ project.owner.username }}</strong>
+                                <small class="text-muted d-block">{{ project.owner.email }}</small>
+                            </td>
+                            <td>{{ project.scan_results|length }}</td>
+                            <td>{{ project.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin.view_project', project_id=project.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.delete_project_admin', project_id=project.id) }}" style="display:inline;" onsubmit="return confirm('Delete this project?');">
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h4>No projects found</h4>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

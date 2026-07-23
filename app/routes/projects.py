@@ -25,36 +25,49 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def detect_language(code_content):
-    code_lower = code_content[:500].lower()
-    
-    # Check for Java FIRST
+    if not code_content:
+        return 'python'
+    code_lower = code_content[:1000].lower()
+    if '#include' in code_lower or 'int main' in code_lower or 'printf' in code_lower:
+        return 'c'
     if 'import java.' in code_lower or 'public class' in code_lower:
         return 'java'
-    
-    # Check for C/C++
-    if '#include' in code_lower:
-        return 'c'
-    if 'int main' in code_lower and ('printf' in code_lower or 'strcpy' in code_lower):
-        return 'c'
-    if 'void ' in code_lower and 'char *' in code_lower:
-        return 'c'
-    
-    # Check for Python
-    if 'def ' in code_lower and ':' in code_lower:
+    if 'import ' in code_lower or 'def ' in code_lower or 'print(' in code_lower:
         return 'python'
-    if 'import ' in code_lower and ('os' in code_lower or 'sys' in code_lower):
-        return 'python'
-    
-    return 'unknown'
+    return 'python'
+
+def run_ai_analysis(scan_result, findings, language, context=None):
+    try:
+        from app.utils.ai_service import AIPrioritizer
+        ai = AIPrioritizer()
+        if ai.available:
+            print(f"🤖 AI analyzing {len(findings)} findings...")
+            result = ai.analyze_findings(findings, language, context)
+            scan_result.ai_analysis = json.dumps(result)
+            scan_result.ai_status = 'complete'
+            db.session.commit()
+            return True
+        else:
+            scan_result.ai_status = 'failed'
+            db.session.commit()
+            return False
+    except Exception as e:
+        print(f"❌ AI error: {e}")
+        scan_result.ai_status = 'failed'
+        db.session.commit()
+        return False
+
+def get_tool_info_for_language(language):
+    tools = {'c': 'KLEE', 'cpp': 'KLEE', 'python': 'Angr', 'java': 'JPF'}
+    return tools.get(language, 'Symbolic')
 
 def get_highest_severity(results):
     if not results or 'by_severity' not in results:
         return 'info'
     by_severity = results.get('by_severity', {})
-    severities = ['critical', 'high', 'medium', 'low', 'info']
-    for severity in severities:
-        if by_severity.get(severity, 0) > 0:
-            return severity
+    for sev in ['critical', 'high', 'medium', 'low', 'info']:
+        if by_severity.get(sev, 0) > 0:
+            return sev
     return 'info'
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -66,14 +79,11 @@ def create():
         scanner_type = request.form.get('scanner_type', 'semgrep')
         
         if not project_name:
-            flash('Project name is required', 'error')
+            flash('Project name required', 'error')
             return redirect(url_for('projects.create'))
         
         has_file = False
-        uploaded_file_path = None
         file_content = ""
-        final_content = ""
-        filename = ""
         
         if 'code_file' in request.files:
             file = request.files['code_file']
@@ -85,7 +95,6 @@ def create():
                     os.makedirs(upload_folder, exist_ok=True)
                     filepath = os.path.join(upload_folder, filename)
                     file.save(filepath)
-                    uploaded_file_path = filepath
                     try:
                         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                             file_content = f.read()
@@ -96,38 +105,28 @@ def create():
                     flash('File type not allowed', 'error')
                     return redirect(url_for('projects.create'))
         
-        # Determine which content to use
-        if has_file and file_content:
-            final_content = file_content
-            filename = os.path.basename(uploaded_file_path) if uploaded_file_path else ''
-        elif code_content:
-            final_content = code_content
-            filename = ''
-        else:
-            flash('Please provide code content or upload a file', 'error')
-            return redirect(url_for('projects.create'))
+        final_content = file_content if has_file and file_content else code_content
+        filename = ''
         
-        # Validate language support
-        lang_check = detect_language(final_content)
-        if lang_check == 'unknown':
-            flash('Unsupported language! VAST currently supports Python (.py), C/C++ (.c/.cpp), and Java (.java).', 'error')
+        if not final_content:
+            flash('Please provide code or upload a file', 'error')
             return redirect(url_for('projects.create'))
         
         existing = Project.query.filter_by(user_id=current_user.id, project_name=project_name).first()
         if existing:
-            flash('Project with this name already exists', 'error')
+            flash('Project name exists', 'error')
             return redirect(url_for('projects.create'))
         
         project = Project(
             user_id=current_user.id,
             project_name=project_name,
             code_content=final_content,
-            filename=filename if has_file else ''
+            filename=filename
         )
         db.session.add(project)
         db.session.commit()
         
-        flash(f'Project "{project_name}" created successfully!', 'success')
+        flash(f'Project "{project_name}" created!', 'success')
         return redirect(url_for('projects.perform_scan', project_id=project.id, tool=scanner_type))
     
     return render_template('projects/create.html', now=datetime.now())
@@ -141,7 +140,6 @@ def scan(project_id):
         return redirect(url_for('dashboard.index'))
     
     scan_results = ScanResult.query.filter_by(project_id=project.id).order_by(ScanResult.created_at.desc()).all()
-    
     parsed_results = []
     for result in scan_results:
         try:
@@ -151,7 +149,9 @@ def scan(project_id):
                 'tool': result.tool_name,
                 'severity': result.severity,
                 'findings': findings,
-                'created_at': result.created_at
+                'created_at': result.created_at,
+                'ai_status': result.ai_status,
+                'ai_analysis': result.ai_analysis
             })
         except:
             parsed_results.append({
@@ -159,7 +159,9 @@ def scan(project_id):
                 'tool': result.tool_name,
                 'severity': result.severity,
                 'findings': {'by_severity': {}, 'details': []},
-                'created_at': result.created_at
+                'created_at': result.created_at,
+                'ai_status': result.ai_status,
+                'ai_analysis': result.ai_analysis
             })
     
     return render_template('projects/scan.html', project=project, scan_results=parsed_results, now=datetime.now())
@@ -168,26 +170,17 @@ def scan(project_id):
 @login_required
 def perform_scan(project_id, tool):
     project = Project.query.get_or_404(project_id)
-    
     if project.user_id != current_user.id:
         flash('Unauthorized access', 'error')
         return redirect(url_for('dashboard.index'))
     
-    print(f"\n{'='*80}")
-    print(f"PERFORMING SCAN: {project.project_name}")
-    print(f"Tool: {tool}")
-    print(f"{'='*80}")
-    
     language = detect_language(project.code_content)
-    print(f"Detected language: {language}")
+    print(f"\n📊 Performing {tool} scan on {project.project_name} ({language})")
     
-    # ========== STATIC ANALYSIS ==========
     if tool == 'semgrep':
         try:
-            start_time = time.time()
             scanner = UniversalScanner()
             results = scanner.scan_code(project.code_content, project.filename)
-            scan_time = time.time() - start_time
             
             if 'error' not in results:
                 scan_result = ScanResult(
@@ -199,139 +192,176 @@ def perform_scan(project_id, tool):
                 db.session.add(scan_result)
                 db.session.commit()
                 
-                findings_count = results.get('total_findings', 0)
-                if findings_count > 0:
-                    flash(f'Static Analysis: Found {findings_count} issues', 'success')
-                else:
-                    flash(f'Static Analysis: No issues found', 'success')
-            else:
-                flash(f'Static Analysis failed: {results["error"]}', 'error')
+                run_ai_analysis(scan_result, results.get('details', []), language, f"Project: {project.project_name}")
                 
+                flash(f'Static: Found {results.get("total_findings", 0)} issues', 'success')
+            else:
+                flash(f'Static failed: {results["error"]}', 'error')
         except Exception as e:
-            flash(f'Static Analysis error: {str(e)}', 'error')
-            traceback.print_exc()
+            flash(f'Static error: {str(e)}', 'error')
     
-    # ========== SYMBOLIC ANALYSIS ==========
     elif tool == 'symbolic':
         try:
-            start_time = time.time()
-            symbolic_analyzer = SymbolicAnalyzer()
-            results = symbolic_analyzer.analyze(project.code_content, language, project.filename)
-            scan_time = time.time() - start_time
+            symbolic = SymbolicAnalyzer()
+            results = symbolic.analyze(project.code_content, language, project.filename)
             
-            formatted_results = {
+            actual_tool = get_tool_info_for_language(language)
+            formatted = {
                 "total_findings": len(results.get('findings', [])),
                 "by_severity": {},
                 "details": results.get('findings', [])
             }
-            
-            for finding in results.get('findings', []):
-                severity = finding.get('severity', 'info')
-                formatted_results["by_severity"][severity] = formatted_results["by_severity"].get(severity, 0) + 1
+            for f in results.get('findings', []):
+                sev = f.get('severity', 'info')
+                formatted["by_severity"][sev] = formatted["by_severity"].get(sev, 0) + 1
             
             scan_result = ScanResult(
                 project_id=project.id,
-                tool_name='symbolic',
-                findings=json.dumps(formatted_results),
-                severity=get_highest_severity(formatted_results)
+                tool_name=f'symbolic_{actual_tool}',
+                findings=json.dumps(formatted),
+                severity=get_highest_severity(formatted)
             )
             db.session.add(scan_result)
             db.session.commit()
             
-            findings_count = len(results.get('findings', []))
-            if findings_count > 0:
-                flash(f'Symbolic Analysis: Found {findings_count} issues', 'success')
-            else:
-                flash(f'Symbolic Analysis: No issues found', 'success')
-                
+            run_ai_analysis(scan_result, results.get('findings', []), language, f"Project: {project.project_name}")
+            
+            flash(f'Symbolic ({actual_tool}): Found {len(results.get("findings", []))} issues', 'success')
         except Exception as e:
-            flash(f'Symbolic Analysis error: {str(e)}', 'error')
-            traceback.print_exc()
+            flash(f'Symbolic error: {str(e)}', 'error')
     
-    # ========== FUZZ TESTING ==========
     elif tool == 'fuzz':
         try:
-            start_time = time.time()
             fuzzer = FuzzTester()
             results = fuzzer.fuzz(project.code_content, language, project.filename)
-            scan_time = time.time() - start_time
             
-            formatted_results = {
+            formatted = {
                 "total_findings": len(results.get('findings', [])),
                 "by_severity": {},
                 "details": results.get('findings', [])
             }
-            
-            for finding in results.get('findings', []):
-                severity = finding.get('severity', 'info')
-                formatted_results["by_severity"][severity] = formatted_results["by_severity"].get(severity, 0) + 1
+            for f in results.get('findings', []):
+                sev = f.get('severity', 'info')
+                formatted["by_severity"][sev] = formatted["by_severity"].get(sev, 0) + 1
             
             scan_result = ScanResult(
                 project_id=project.id,
                 tool_name='fuzz',
-                findings=json.dumps(formatted_results),
-                severity=get_highest_severity(formatted_results)
+                findings=json.dumps(formatted),
+                severity=get_highest_severity(formatted)
             )
             db.session.add(scan_result)
             db.session.commit()
             
-            findings_count = len(results.get('findings', []))
-            if findings_count > 0:
-                flash(f'Fuzz Testing: Found {findings_count} edge-case issues', 'success')
-            else:
-                flash(f'Fuzz Testing: No edge-case vulnerabilities found', 'success')
-                
-        except Exception as e:
-            flash(f'Fuzz Testing error: {str(e)}', 'error')
-            traceback.print_exc()
-    
-    # ========== HYBRID ANALYSIS ==========
-    elif tool == 'hybrid':
-        try:
-            from app.utils.hybrid_analyzer import HybridAnalyzer
-            start_time = time.time()
-            hybrid_analyzer = HybridAnalyzer()
-            results = hybrid_analyzer.analyze(project.code_content, language, project.filename)
-            scan_time = time.time() - start_time
+            run_ai_analysis(scan_result, results.get('findings', []), language, f"Project: {project.project_name}")
             
-            formatted_results = {
-                "total_findings": results['summary']['total_findings'],
-                "by_severity": {
-                    "critical": results['summary']['critical'],
-                    "high": results['summary']['high'],
-                    "medium": results['summary']['medium'],
-                    "low": results['summary']['low']
-                },
-                "details": results['combined_findings'],
-                "static_analysis": results.get('static_analysis', {}),
-                "symbolic_analysis": results.get('symbolic_analysis', {}),
-                "fuzz_testing": results.get('fuzz_testing', {})
+            flash(f'Fuzz: Found {len(results.get("findings", []))} issues', 'success')
+        except Exception as e:
+            flash(f'Fuzz error: {str(e)}', 'error')
+    
+    elif tool == 'hybrid':
+        flash('🔄 Hybrid Analysis: Running all tools...', 'info')
+        
+        # Run all three tools
+        all_findings = []
+        tools_run = []
+        
+        # 1. Static Analysis
+        try:
+            scanner = UniversalScanner()
+            static_results = scanner.scan_code(project.code_content, project.filename)
+            if 'error' not in static_results:
+                scan_result = ScanResult(
+                    project_id=project.id,
+                    tool_name='hybrid_static',
+                    findings=json.dumps(static_results),
+                    severity=get_highest_severity(static_results)
+                )
+                db.session.add(scan_result)
+                db.session.commit()
+                tools_run.append('Static')
+                all_findings.extend(static_results.get('details', []))
+        except Exception as e:
+            print(f"Hybrid Static error: {e}")
+        
+        # 2. Symbolic Analysis
+        try:
+            symbolic = SymbolicAnalyzer()
+            sym_results = symbolic.analyze(project.code_content, language, project.filename)
+            actual_tool = get_tool_info_for_language(language)
+            formatted = {
+                "total_findings": len(sym_results.get('findings', [])),
+                "by_severity": {},
+                "details": sym_results.get('findings', [])
             }
+            for f in sym_results.get('findings', []):
+                sev = f.get('severity', 'info')
+                formatted["by_severity"][sev] = formatted["by_severity"].get(sev, 0) + 1
+            scan_result = ScanResult(
+                project_id=project.id,
+                tool_name=f'hybrid_symbolic_{actual_tool}',
+                findings=json.dumps(formatted),
+                severity=get_highest_severity(formatted)
+            )
+            db.session.add(scan_result)
+            db.session.commit()
+            tools_run.append('Symbolic')
+            all_findings.extend(formatted.get('details', []))
+        except Exception as e:
+            print(f"Hybrid Symbolic error: {e}")
+        
+        # 3. Fuzz Testing
+        try:
+            fuzzer = FuzzTester()
+            fuzz_results = fuzzer.fuzz(project.code_content, language, project.filename)
+            formatted = {
+                "total_findings": len(fuzz_results.get('findings', [])),
+                "by_severity": {},
+                "details": fuzz_results.get('findings', [])
+            }
+            for f in fuzz_results.get('findings', []):
+                sev = f.get('severity', 'info')
+                formatted["by_severity"][sev] = formatted["by_severity"].get(sev, 0) + 1
+            scan_result = ScanResult(
+                project_id=project.id,
+                tool_name='hybrid_fuzz',
+                findings=json.dumps(formatted),
+                severity=get_highest_severity(formatted)
+            )
+            db.session.add(scan_result)
+            db.session.commit()
+            tools_run.append('Fuzz')
+            all_findings.extend(formatted.get('details', []))
+        except Exception as e:
+            print(f"Hybrid Fuzz error: {e}")
+        
+        # Combined AI analysis
+        if all_findings:
+            combined_result = {
+                "total_findings": len(all_findings),
+                "by_severity": {},
+                "details": all_findings
+            }
+            for f in all_findings:
+                sev = f.get('severity', 'info')
+                combined_result["by_severity"][sev] = combined_result["by_severity"].get(sev, 0) + 1
             
             scan_result = ScanResult(
                 project_id=project.id,
-                tool_name='hybrid',
-                findings=json.dumps(formatted_results),
-                severity=get_highest_severity(formatted_results)
+                tool_name='hybrid_combined',
+                findings=json.dumps(combined_result),
+                severity=get_highest_severity(combined_result)
             )
             db.session.add(scan_result)
             db.session.commit()
             
-            findings_count = results['summary']['total_findings']
-            if findings_count > 0:
-                flash(f'Hybrid Analysis Complete! Found {findings_count} issues across Static, Symbolic, and Fuzz testing.', 'success')
-            else:
-                flash(f'Hybrid Analysis Complete! No vulnerabilities found.', 'success')
-                
-        except Exception as e:
-            flash(f'Hybrid Analysis error: {str(e)}', 'error')
-            traceback.print_exc()
-    
-    else:
-        flash(f'{tool.capitalize()} analysis not recognized', 'error')
+            run_ai_analysis(scan_result, all_findings, language, f"Project: {project.project_name} - Hybrid")
+        
+        flash(f'✅ Hybrid Complete! Ran: {", ".join(tools_run)}. Found {len(all_findings)} total issues.', 'success')
     
     return redirect(url_for('projects.scan', project_id=project.id))
 
+# ===== EXISTING PROJECTS ROUTE =====
 @bp.route('/existing')
 @login_required
 def existing():
@@ -365,12 +395,20 @@ def download_report(scan_id):
         os.makedirs(reports_dir, exist_ok=True)
         full_path = os.path.join(reports_dir, report_filename)
         
+        ai_data = None
+        if scan_result.ai_analysis:
+            try:
+                ai_data = json.loads(scan_result.ai_analysis)
+            except:
+                pass
+        
         pdf_generator = PDFReportGenerator(full_path)
         pdf_generator.generate_vulnerability_report(
             project_data={'project_name': project.project_name},
             scan_results=findings.get('by_severity', {}),
             user_info={'username': current_user.username, 'email': current_user.email},
-            findings_details=findings.get('details', [])
+            findings_details=findings.get('details', []),
+            ai_data=ai_data
         )
         
         return send_file(full_path, as_attachment=True, download_name=report_filename, mimetype='application/pdf')

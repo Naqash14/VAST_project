@@ -1,0 +1,39 @@
+<!-- AI Analysis Section -->
+{% if result.ai_status == 'complete' and result.ai_analysis %}
+{% set ai_data = result.ai_analysis|json_loads %}
+{% if ai_data and ai_data.findings %}
+<div class="ai-section">
+    <h6><i class="fas fa-robot me-2"></i>AI-Powered Analysis (Groq)</h6>
+    
+    <div class="ai-summary-box">
+        <div class="row">
+            <div class="col-md-3"><strong>Critical:</strong> <span class="text-danger">{{ ai_data.summary.critical_count }}</span></div>
+            <div class="col-md-3"><strong>High:</strong> <span class="text-warning">{{ ai_data.summary.high_count }}</span></div>
+            <div class="col-md-3"><strong>Medium:</strong> <span class="text-info">{{ ai_data.summary.medium_count }}</span></div>
+            <div class="col-md-3"><strong>Low:</strong> <span class="text-secondary">{{ ai_data.summary.low_count }}</span></div>
+        </div>
+        <div class="mt-2"><strong>Priority:</strong> {{ ai_data.summary.overall_priority }}</div>
+    </div>
+    
+    {% for ai_finding in ai_data.findings %}
+    <div class="ai-finding">
+        <div class="d-flex justify-content-between align-items-center">
+            <strong>Finding #{{ ai_finding.id + 1 }}</strong>
+            <span class="cvss">CVSS Score: {{ ai_finding.cvss_score }}</span>
+        </div>
+        <div class="mb-2">
+            <span class="priority-{{ ai_finding.priority|lower }}">Priority: {{ ai_finding.priority }}</span>
+        </div>
+        <div class="remediation full-text">
+            <strong>Remediation:</strong><br>
+            {{ ai_finding.remediation }}
+        </div>
+        <div class="exploitability full-text">
+            <strong>Exploitability:</strong><br>
+            {{ ai_finding.exploitability }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
