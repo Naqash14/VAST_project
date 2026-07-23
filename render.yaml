@@ -1,53 +1,25 @@
 services:
   - type: web
-    name: vast-vulnerability-scanner
+    name: vast-scanner
     env: python
-    buildCommand: |
-      pip install -r requirements.txt
-      python -c "from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all(); from app.models import User; admin = User.query.filter_by(email='admin@vast.local').first(); import os; from werkzeug.security import generate_password_hash; if not admin: admin = User(username='admin', email='admin@vast.local', is_admin=True, is_verified=True); admin.set_password(os.environ.get('ADMIN_PASSWORD', 'Admin@123456')); db.session.add(admin); db.session.commit(); print('Admin user created')"
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: FLASK_ENV
         value: production
-      - key: FLASK_DEBUG
-        value: 0
       - key: DATABASE_URL
         fromDatabase:
           name: vast_db
           property: connectionString
       - key: GROQ_API_KEY
         sync: false
-      - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
-      - key: AI_TIMEOUT
-        value: 60
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: 587
-      - key: MAIL_USE_TLS
-        value: true
       - key: MAIL_USERNAME
         sync: false
       - key: MAIL_PASSWORD
         sync: false
-      - key: MAIL_DEFAULT_SENDER
-        sync: false
-      - key: ADMIN_USERNAME
-        value: admin
-      - key: ADMIN_EMAIL
-        value: admin@vast.local
-      - key: ADMIN_PASSWORD
-        sync: false
-      - key: UPLOAD_FOLDER
-        value: app/uploads
-      - key: MAX_CONTENT_LENGTH
-        value: 16777216
 
 databases:
   - name: vast_db
     plan: free
-    databaseName: vast_scanner
-    user: vast_user
