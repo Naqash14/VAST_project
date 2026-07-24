@@ -95,3 +95,5 @@ def create_app():
     app.register_blueprint(projects.bp)
     
     return app
+    from app.routes import health
+    app.register_blueprint(health.bp)

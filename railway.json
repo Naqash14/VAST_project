@@ -1,10 +1,12 @@
 {
   "build": {
-    "builder": "DOCKERFILE"
+    "builder": "NIXPACKS",
+    "buildCommand": "pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && python -c \"from app import create_app, db; app = create_app(); app.app_context().push(); db.create_all(); print('✅ Database created')\""
   },
   "deploy": {
     "startCommand": "gunicorn run:app --bind 0.0.0.0:$PORT",
     "healthcheckPath": "/health",
-    "restartPolicyType": "ON_FAILURE"
+    "restartPolicyType": "ON_FAILURE",
+    "numReplicas": 1
   }
 }
