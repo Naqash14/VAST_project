@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 import os
 import json
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,32 +16,37 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
     
-    # Load configuration from environment
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
     
-    # Database - Auto-detect SQLite or PostgreSQL
+    # Get database URL
     database_url = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
     
-    # Fix for Railway PostgreSQL
+    # Fix PostgreSQL URL for Railway
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    # For Railway, use SQLite if PostgreSQL fails
+    if 'postgresql' in database_url:
+        try:
+            import psycopg2
+            print("✅ psycopg2 loaded successfully")
+        except ImportError:
+            print("⚠️ psycopg2 not found, using SQLite")
+            database_url = 'sqlite:///vast.db'
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Only add pool settings for PostgreSQL
+    # Add pool settings for PostgreSQL
     if 'postgresql' in database_url:
         app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
             'pool_size': 5,
             'pool_recycle': 300,
             'pool_pre_ping': True,
-            'connect_args': {
-                'connect_timeout': 10,
-            }
         }
-        print("✅ Using PostgreSQL on Railway")
+        print(f"✅ Using PostgreSQL: {database_url[:50]}...")
     else:
-        print("✅ Using SQLite")
+        print(f"✅ Using SQLite: {database_url}")
     
     # Email config
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -53,7 +59,7 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
     app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
     
-    # JSON filter for templates
+    # JSON filter
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -80,7 +86,7 @@ def create_app():
             db.create_all()
             print("✅ Database tables created")
             
-            # Create admin user if not exists
+            # Create admin user
             admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vast.local')
             admin_user = models.User.query.filter_by(email=admin_email).first()
             if not admin_user:
@@ -95,7 +101,7 @@ def create_app():
                 db.session.commit()
                 print("✅ Admin user created")
         except Exception as e:
-            print(f"⚠️ Database setup error: {e}")
+            print(f"⚠️ Database error: {e}")
     
     # Register blueprints
     from app.routes import auth, dashboard, projects

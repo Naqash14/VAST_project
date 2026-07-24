@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip"]
+nixPkgs = ["python311", "python311Packages.pip", "postgresql"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
@@ -8,4 +8,4 @@ cmds = ["pip install -r requirements.txt"]
 cmds = ["pip install psycopg2-binary"]
 
 [start]
-cmd = "gunicorn run:app"
+cmd = "gunicorn run:app --bind 0.0.0.0:$PORT"
