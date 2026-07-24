@@ -1,11 +1,13 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
 .Python
 venv/
 env/
 ENV/
+.venv/
 
 # Database
 *.db
@@ -16,14 +18,28 @@ instance/
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # Logs
 *.log
+*.log.*
 
-# Uploads
+# Uploads & Reports
 app/uploads/
 app/reports/
+app/static/uploads/
 
 # Environment
 .env
 .env.local
+.env.*.local
+
+# Docker (we don't want this on Railway)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Test files
+test_*.py
+debug_*.py
+verify_*.py
