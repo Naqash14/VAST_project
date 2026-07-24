@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""
-VAST Vulnerability Scanner - Main Entry Point
-"""
-
 import os
 import sys
 import logging
 from app import create_app
 
-# Configure logging
+# Create logs directory
+os.makedirs('logs', exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('vast.log')
+        logging.FileHandler('logs/app.log')
     ]
 )
 
