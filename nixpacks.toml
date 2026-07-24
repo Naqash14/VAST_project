@@ -1,11 +1,22 @@
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip", "postgresql"]
+nixPkgs = ["python311", "python311Packages.pip", "postgresql", "gcc", "g++", "clang", "python311Packages.virtualenv"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "python3 -m venv /app/venv",
+  "/app/venv/bin/pip install --upgrade pip",
+  "/app/venv/bin/pip install -r requirements.txt"
+]
 
 [phases.build]
-cmds = ["pip install psycopg2-binary"]
+cmds = [
+  "/app/venv/bin/pip install psycopg2-binary",
+  "/app/venv/bin/pip install semgrep"
+]
 
 [start]
-cmd = "gunicorn run:app --bind 0.0.0.0:$PORT"
+cmd = "/app/venv/bin/gunicorn run:app --bind 0.0.0.0:$PORT"
+
+[deploy]
+healthcheck = "/health"
+restartPolicyType = "ON_FAILURE"
