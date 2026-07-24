@@ -15,12 +15,34 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
     
+    # Load configuration from environment
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
-    app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
     
+    # Database - Auto-detect SQLite or PostgreSQL
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
+    
+    # Fix for Railway PostgreSQL
+    if database_url and database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Only add pool settings for PostgreSQL
+    if 'postgresql' in database_url:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'pool_size': 5,
+            'pool_recycle': 300,
+            'pool_pre_ping': True,
+            'connect_args': {
+                'connect_timeout': 10,
+            }
+        }
+        print("✅ Using PostgreSQL on Railway")
+    else:
+        print("✅ Using SQLite")
+    
+    # Email config
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
@@ -28,6 +50,10 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
     
+    app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
+    app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
+    
+    # JSON filter for templates
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -35,6 +61,7 @@ def create_app():
         except:
             return None
     
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
@@ -42,21 +69,38 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
+    # Create upload folder
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
+    # Create tables
     with app.app_context():
         try:
             from app import models
             db.create_all()
-            print("✅ Database tables created/verified")
+            print("✅ Database tables created")
+            
+            # Create admin user if not exists
+            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vast.local')
+            admin_user = models.User.query.filter_by(email=admin_email).first()
+            if not admin_user:
+                admin = models.User(
+                    username=os.environ.get('ADMIN_USERNAME', 'admin'),
+                    email=admin_email,
+                    is_verified=True,
+                    is_admin=True
+                )
+                admin.set_password(os.environ.get('ADMIN_PASSWORD', 'Admin@123456'))
+                db.session.add(admin)
+                db.session.commit()
+                print("✅ Admin user created")
         except Exception as e:
-            print(f"⚠️ Database error: {e}")
+            print(f"⚠️ Database setup error: {e}")
     
-    from app.routes import auth, dashboard, projects, admin
+    # Register blueprints
+    from app.routes import auth, dashboard, projects
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
-    app.register_blueprint(admin.bp)
     
     return app

@@ -4,33 +4,15 @@ import sys
 import logging
 from app import create_app
 
-# Create logs directory
-os.makedirs('logs', exist_ok=True)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/app.log')
-    ]
-)
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 app = create_app()
 
 if __name__ == '__main__':
     env = os.environ.get('FLASK_ENV', 'development')
+    port = int(os.environ.get('PORT', 5000))
+    debug = env == 'development'
     
-    if env == 'production':
-        host = '0.0.0.0'
-        port = int(os.environ.get('PORT', 5000))
-        debug = False
-        logger.info(f"🚀 Starting VAST in PRODUCTION mode on port {port}")
-    else:
-        host = '127.0.0.1'
-        port = 5000
-        debug = True
-        logger.info(f"🔧 Starting VAST in DEVELOPMENT mode on port {port}")
-    
-    app.run(host=host, port=port, debug=debug)
+    logger.info(f"🚀 Starting VAST on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)
