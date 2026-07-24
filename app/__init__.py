@@ -72,11 +72,12 @@ def create_app():
             
             # Create admin user if not exists
             from app.models import User
-            admin = User.query.filter_by(email=os.environ.get('ADMIN_EMAIL', 'admin@vast.local')).first()
+            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vast.local')
+            admin = User.query.filter_by(email=admin_email).first()
             if not admin:
                 admin = User(
                     username=os.environ.get('ADMIN_USERNAME', 'admin'),
-                    email=os.environ.get('ADMIN_EMAIL', 'admin@vast.local'),
+                    email=admin_email,
                     is_admin=True,
                     is_verified=True
                 )
@@ -87,7 +88,7 @@ def create_app():
         except Exception as e:
             logger.error(f"⚠️ Database error: {e}")
     
-    # Register blueprints
+    # Register blueprints (only auth, dashboard, projects)
     from app.routes import auth, dashboard, projects
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
