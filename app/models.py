@@ -101,3 +101,6 @@ def load_user(user_id):
 # Add is_admin field if not exists
 # In User class, add:
 # is_admin = db.Column(db.Boolean, default=False)
+
+# Add this line to User class if missing:
+# is_admin = db.Column(db.Boolean, default=False)

@@ -5,7 +5,6 @@ from flask_mail import Mail
 import os
 import json
 from dotenv import load_dotenv
-import sys
 
 load_dotenv()
 
@@ -18,27 +17,20 @@ def create_app():
     
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
     
-    # Database URL
+    # FORCE SQLITE on Railway (avoid PostgreSQL issues)
     database_url = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
     
-    # Fix PostgreSQL URL
-    if database_url and database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    # If on Railway, use SQLite
+    if 'railway' in os.environ.get('RAILWAY_ENVIRONMENT', ''):
+        database_url = 'sqlite:///vast.db'
+        print("✅ Railway detected - using SQLite")
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    if 'postgresql' in database_url:
-        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-            'pool_size': 5,
-            'pool_recycle': 300,
-            'pool_pre_ping': True,
-        }
-        print("✅ Using PostgreSQL on Railway")
-    else:
-        print("✅ Using SQLite")
+    print(f"✅ Database: {database_url}")
     
-    # Email
+    # Email config
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
@@ -57,6 +49,7 @@ def create_app():
         except:
             return None
     
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
@@ -64,15 +57,18 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
+    # Create upload folder
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
+    # Create tables
     with app.app_context():
         try:
             from app import models
             db.create_all()
-            print("✅ Tables created")
+            print("✅ Database tables created")
             
+            # Create admin user
             admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vast.local')
             admin_user = models.User.query.filter_by(email=admin_email).first()
             if not admin_user:
@@ -85,15 +81,14 @@ def create_app():
                 admin.set_password(os.environ.get('ADMIN_PASSWORD', 'Admin@123456'))
                 db.session.add(admin)
                 db.session.commit()
-                print("✅ Admin created")
+                print("✅ Admin user created")
         except Exception as e:
             print(f"⚠️ Database error: {e}")
     
+    # Register blueprints
     from app.routes import auth, dashboard, projects
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
     
     return app
-    from app.routes import health
-    app.register_blueprint(health.bp)
