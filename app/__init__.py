@@ -4,7 +4,6 @@ from flask_login import LoginManager
 from flask_mail import Mail
 import os
 import json
-import sys
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,18 +17,17 @@ def create_app():
     
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
     
-    # Get database URL
+    # Database - Auto-detect SQLite or PostgreSQL
     database_url = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
     
-    # Fix PostgreSQL URL for Railway
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     
-    # For Railway, use SQLite if PostgreSQL fails
+    # For Railway, handle PostgreSQL gracefully
     if 'postgresql' in database_url:
         try:
             import psycopg2
-            print("✅ psycopg2 loaded successfully")
+            print("✅ PostgreSQL available")
         except ImportError:
             print("⚠️ psycopg2 not found, using SQLite")
             database_url = 'sqlite:///vast.db'
@@ -37,16 +35,12 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Add pool settings for PostgreSQL
     if 'postgresql' in database_url:
         app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
             'pool_size': 5,
             'pool_recycle': 300,
             'pool_pre_ping': True,
         }
-        print(f"✅ Using PostgreSQL: {database_url[:50]}...")
-    else:
-        print(f"✅ Using SQLite: {database_url}")
     
     # Email config
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -59,7 +53,7 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
     app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
     
-    # JSON filter
+    # JSON filter for templates
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -103,10 +97,11 @@ def create_app():
         except Exception as e:
             print(f"⚠️ Database error: {e}")
     
-    # Register blueprints
-    from app.routes import auth, dashboard, projects
+    # Register blueprints (INCLUDING HEALTH)
+    from app.routes import auth, dashboard, projects, health
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
+    app.register_blueprint(health.bp)  # ⚠️ Healthcheck endpoint
     
     return app
