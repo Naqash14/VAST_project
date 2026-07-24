@@ -33,3 +33,4 @@ gunicorn==20.1.0
 # Utilities
 itsdangerous==2.1.2
 click==8.1.7
+setuptools<81
