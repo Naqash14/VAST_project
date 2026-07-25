@@ -1,6 +1,6 @@
 """
 AI-Assisted Vulnerability Analysis Service
-Uses Groq API for fast, cloud-based LLM analysis
+Uses Groq API via requests (more reliable)
 """
 
 import json
@@ -8,6 +8,7 @@ import os
 import re
 import time
 import logging
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,6 +22,7 @@ class AIPrioritizer:
         self.model = model or os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
         self.api_key = os.environ.get('GROQ_API_KEY')
         self.timeout = int(os.environ.get('AI_TIMEOUT', 60))
+        self.api_url = "https://api.groq.com/openai/v1/chat/completions"
         self.available = self._check_availability()
 
         if self.available:
@@ -35,11 +37,21 @@ class AIPrioritizer:
             print("⚠️ No GROQ_API_KEY found in environment")
             return False
         try:
-            from groq import Groq
-            client = Groq(api_key=self.api_key)
-            models = client.models.list()
-            print(f"✅ Groq API connection successful")
-            return True
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            response = requests.get(
+                "https://api.groq.com/openai/v1/models",
+                headers=headers,
+                timeout=10
+            )
+            if response.status_code == 200:
+                print("✅ Groq API connection successful")
+                return True
+            else:
+                print(f"⚠️ Groq API returned {response.status_code}")
+                return False
         except Exception as e:
             print(f"⚠️ Groq API check failed: {e}")
             return False
@@ -115,26 +127,42 @@ Respond with ONLY valid JSON.
     def _call_groq(self, prompt):
         start_time = time.time()
         try:
-            from groq import Groq
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
 
-            client = Groq(api_key=self.api_key)
-
-            chat_completion = client.chat.completions.create(
-                messages=[
+            data = {
+                "model": self.model,
+                "messages": [
                     {"role": "system", "content": "You are a security expert. Respond only with valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                model=self.model,
-                temperature=0.1,
-                max_tokens=1500,
+                "temperature": 0.1,
+                "max_tokens": 1500
+            }
+
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                json=data,
                 timeout=self.timeout
             )
 
             elapsed = time.time() - start_time
-            response_text = chat_completion.choices[0].message.content
-            print(f"✅ Groq call took {elapsed:.1f}s, response length {len(response_text)} chars")
-            return response_text
 
+            if response.status_code == 200:
+                result = response.json()
+                response_text = result['choices'][0]['message']['content']
+                print(f"✅ Groq call took {elapsed:.1f}s, response length {len(response_text)} chars")
+                return response_text
+            else:
+                print(f"❌ Groq API error: {response.status_code} - {response.text[:200]}")
+                return f"Error: HTTP {response.status_code}"
+
+        except requests.exceptions.Timeout:
+            print(f"❌ Groq call timed out after {self.timeout}s")
+            return "Error: Timeout"
         except Exception as e:
             print(f"❌ Groq call failed: {str(e)}")
             return f"Error: {str(e)}"
