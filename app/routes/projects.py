@@ -38,7 +38,12 @@ def detect_language(code_content):
 def run_ai_analysis(scan_result, findings, language, context=None):
     """Run AI analysis and save to database"""
     try:
+        print("🤖 Starting AI analysis...")
         ai = AIPrioritizer()
+        
+        print(f"🤖 AI Available: {ai.available}")
+        print(f"🤖 AI Model: {ai.model}")
+        print(f"🤖 API Key: {ai.api_key[:10]}...")
         
         if ai.available:
             print(f"🤖 Running AI analysis on {len(findings)} findings...")
@@ -51,17 +56,19 @@ def run_ai_analysis(scan_result, findings, language, context=None):
             print(f"✅ AI Analysis complete for scan {scan_result.id}")
             return True
         else:
+            print("⚠️ AI unavailable - Groq API key not set or invalid")
             scan_result.ai_status = 'failed'
             scan_result.ai_analysis = json.dumps({
                 "error": "AI service unavailable",
-                "message": "Groq API not configured"
+                "message": "GROQ_API_KEY not configured on server"
             })
             db.session.commit()
-            print("⚠️ AI unavailable")
             return False
             
     except Exception as e:
         print(f"❌ AI Analysis failed: {e}")
+        import traceback
+        traceback.print_exc()
         scan_result.ai_status = 'failed'
         scan_result.ai_analysis = json.dumps({"error": str(e)})
         db.session.commit()
@@ -427,7 +434,6 @@ def download_report(scan_id):
 @bp.route('/delete-scan/<int:scan_id>', methods=['POST'])
 @login_required
 def delete_scan(scan_id):
-    """Delete a specific scan result"""
     scan_result = ScanResult.query.get_or_404(scan_id)
     project = Project.query.get_or_404(scan_result.project_id)
     

@@ -26,15 +26,19 @@ class AIPrioritizer:
         if self.available:
             print(f"🤖 AI Service ready: {self.model}")
         else:
-            print("⚠️ AI Service unavailable (GROQ_API_KEY not set or invalid)")
+            print("⚠️ AI Service unavailable")
+            print(f"   API Key set: {bool(self.api_key)}")
+            print(f"   Model: {self.model}")
 
     def _check_availability(self):
         if not self.api_key:
+            print("⚠️ No GROQ_API_KEY found in environment")
             return False
         try:
             from groq import Groq
             client = Groq(api_key=self.api_key)
             models = client.models.list()
+            print(f"✅ Groq API connection successful")
             return True
         except Exception as e:
             print(f"⚠️ Groq API check failed: {e}")
@@ -57,7 +61,6 @@ class AIPrioritizer:
                 if parsed and 'findings' in parsed and 'summary' in parsed:
                     parsed['summary'] = self._recompute_summary(parsed['findings'], len(findings))
                     print("✅ Real AI analysis complete!")
-                    print(f"📊 AI Response length: {len(json.dumps(parsed))} chars")
                     return parsed
                 else:
                     print("⚠️ Failed to parse Groq response")
