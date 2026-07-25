@@ -1,0 +1,106 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Settings - VAST{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Profile Settings -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dashboard.update_profile') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                            <small class="text-muted">Email cannot be changed</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" name="profile_pic" accept="image/*">
+                            {% if current_user.profile_pic %}
+                            <div class="mt-2">
+                                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" 
+                                     alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update Profile</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Change Password -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-key me-2"></i>Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dashboard.change_password') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="new_password" required>
+                            <div class="form-text">Must be at least 8 characters with mix of letters, numbers, and special characters</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-key me-1"></i>Change Password</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Account Info -->
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Username</span>
+                            <strong>{{ current_user.username }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Email</span>
+                            <strong>{{ current_user.email }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status</span>
+                            <span class="badge bg-success">Verified</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Role</span>
+                            <span class="badge bg-{{ 'primary' if current_user.is_admin else 'secondary' }}">
+                                {{ 'Admin' if current_user.is_admin else 'User' }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Joined</span>
+                            <strong>{{ current_user.created_at.strftime('%Y-%m-%d') }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Last Login</span>
+                            <strong>{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'Never' }}</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

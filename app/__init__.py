@@ -5,7 +5,6 @@ from flask_mail import Mail
 import os
 import json
 from dotenv import load_dotenv
-import logging
 
 load_dotenv()
 
@@ -13,14 +12,9 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 def create_app():
     app = Flask(__name__)
     
-    # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -34,16 +28,6 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
-    app.config['MAIL_ASCII_ATTACHMENTS'] = True
-    
-    # Session config for Railway
-    app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_PERMANENT'] = False
-    app.config['SESSION_USE_SIGNER'] = True
-    app.config['SESSION_COOKIE_NAME'] = 'vast_session'
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     
     # Register JSON filter for templates
     @app.template_filter('json_loads')
@@ -63,40 +47,33 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
-    # Import models and create tables
     with app.app_context():
         try:
             from app import models
             db.create_all()
-            logger.info("✅ Database tables created/verified")
+            print("✅ Database tables created/verified")
             
             # Create admin user if not exists
             from app.models import User
-            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@vast.local')
-            admin = User.query.filter_by(email=admin_email).first()
+            admin = User.query.filter_by(username='admin').first()
             if not admin:
                 admin = User(
-                    username=os.environ.get('ADMIN_USERNAME', 'admin'),
-                    email=admin_email,
-                    is_admin=True,
-                    is_verified=True
+                    username='admin',
+                    email='admin@vast.com',
+                    is_verified=True,
+                    is_admin=True
                 )
-                admin.set_password(os.environ.get('ADMIN_PASSWORD', 'Admin@123456'))
+                admin.set_password('Admin@123')
                 db.session.add(admin)
                 db.session.commit()
-                logger.info("✅ Admin user created")
+                print("✅ Admin user created: admin / Admin@123")
         except Exception as e:
-            logger.error(f"⚠️ Database error: {e}")
+            print(f"⚠️ Database error: {e}")
     
-    # Register blueprints (only auth, dashboard, projects)
-    from app.routes import auth, dashboard, projects
+    from app.routes import auth, dashboard, projects, admin
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
-    
-    # Health check endpoint
-    @app.route('/health')
-    def health_check():
-        return {"status": "healthy", "service": "vast-scanner"}, 200
+    app.register_blueprint(admin.bp)
     
     return app

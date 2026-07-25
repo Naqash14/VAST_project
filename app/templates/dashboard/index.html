@@ -12,9 +12,10 @@
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h1 class="card-title">
-                        <i class="fas fa-shield-alt me-2"></i>Welcome, {{ current_user.username }}!
+                        <i class="fas fa-{% if current_user.is_admin %}crown{% else %}shield-alt{% endif %} me-2"></i>
+                        Welcome, {{ current_user.username }}!
                         {% if current_user.is_admin %}
-                        <span class="badge bg-light text-primary ms-2">Admin</span>
+                        <span style="background: #fbbf24; color: #1e293b; font-size: 14px; padding: 2px 12px; border-radius: 20px; margin-left: 10px;">Admin</span>
                         {% endif %}
                     </h1>
                     <p class="card-text">VAST Vulnerability Scanner - Professional Security Analysis Platform</p>
@@ -23,43 +24,49 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- User Stats -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
+            <div class="card border-left-primary shadow h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Projects</div>
                             <div class="h5 mb-0 font-weight-bold">{{ stats.total_projects }}</div>
                         </div>
-                        <div><i class="fas fa-folder fa-2x text-primary opacity-50"></i></div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder fa-2x text-primary"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
+            <div class="card border-left-success shadow h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Scans Today</div>
                             <div class="h5 mb-0 font-weight-bold">{{ stats.scans_today }}</div>
                         </div>
-                        <div><i class="fas fa-search fa-2x text-success opacity-50"></i></div>
+                        <div class="col-auto">
+                            <i class="fas fa-search fa-2x text-success"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
+            <div class="card border-left-danger shadow h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Critical Findings</div>
                             <div class="h5 mb-0 font-weight-bold">{{ stats.critical_findings }}</div>
                         </div>
-                        <div><i class="fas fa-exclamation-triangle fa-2x text-danger opacity-50"></i></div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,43 +74,111 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">New Security Scan</h5>
-                    <p class="card-text text-muted small">Start a new code security analysis</p>
-                    <a href="{{ url_for('projects.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus me-1"></i> New Scan
-                    </a>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-folder-open fa-3x text-warning mb-3"></i>
-                    <h5 class="card-title">View Projects</h5>
-                    <p class="card-text text-muted small">Access and manage existing projects</p>
-                    <a href="{{ url_for('projects.existing') }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-folder-open me-1"></i> Projects
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-history fa-3x text-info mb-3"></i>
-                    <h5 class="card-title">Scan History</h5>
-                    <p class="card-text text-muted small">View complete history of all scans</p>
-                    <a href="{{ url_for('dashboard.history') }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-history me-1"></i> History
-                    </a>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-left-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-3x text-info mb-3"></i>
+                                    <h5 class="card-title">New Security Scan</h5>
+                                    <p class="card-text">Start a new code security analysis</p>
+                                    <a href="{{ url_for('projects.create') }}" class="btn btn-info">
+                                        <i class="fas fa-plus me-1"></i> New Scan
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-left-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-folder-open fa-3x text-warning mb-3"></i>
+                                    <h5 class="card-title">View Projects</h5>
+                                    <p class="card-text">Access and manage existing projects</p>
+                                    <a href="{{ url_for('projects.existing') }}" class="btn btn-warning">
+                                        <i class="fas fa-folder-open me-1"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-left-secondary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-history fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Scan History</h5>
+                                    <p class="card-text">View complete history of all scans</p>
+                                    <a href="{{ url_for('dashboard.history') }}" class="btn btn-secondary">
+                                        <i class="fas fa-history me-1"></i> History
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Admin Panel -->
+    {% if current_user.is_admin and admin_stats %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-crown me-2"></i>Admin Panel</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-0">{{ admin_stats.total_users }}</h2>
+                                    <div>Total Users</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-0">{{ admin_stats.total_projects }}</h2>
+                                    <div>Total Projects</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-0">{{ admin_stats.total_scans }}</h2>
+                                    <div>Total Scans</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-0">{{ admin_stats.critical_vulns }}</h2>
+                                    <div>Critical Vulns</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('dashboard.admin_users') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-users me-1"></i> Manage Users
+                        </a>
+                        <a href="{{ url_for('dashboard.admin_projects') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-project-diagram me-1"></i> Manage Projects
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

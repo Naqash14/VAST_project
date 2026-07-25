@@ -13,7 +13,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     is_2fa_enabled = db.Column(db.Boolean, default=False)
-    is_admin = db.Column(db.Boolean, default=False)  # ✅ Admin flag
+    is_admin = db.Column(db.Boolean, default=False)
     profile_pic = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
@@ -98,9 +98,3 @@ class ScanResult(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-# Add is_admin field if not exists
-# In User class, add:
-# is_admin = db.Column(db.Boolean, default=False)
-
-# Add this line to User class if missing:
-# is_admin = db.Column(db.Boolean, default=False)

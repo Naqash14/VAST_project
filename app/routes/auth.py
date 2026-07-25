@@ -54,12 +54,13 @@ def signup():
         }
         session.permanent = True
         
+        print(f"\n🔵 SIGNUP - Session set: {session.get('pending_user')}")
+        
         otp_code = OTPManager.create_otp(email)
         
         if otp_code:
-            # Non-blocking email send
             send_otp_email(email, otp_code)
-            flash(f'OTP sent to {email}. Please verify.', 'success')
+            flash('OTP sent to your email. Please verify.', 'success')
             return redirect(url_for('auth.verify_otp', email=email))
         else:
             flash('Failed to generate OTP. Try again.', 'error')
@@ -166,18 +167,62 @@ def login():
 @bp.route('/update-profile', methods=['POST'])
 @login_required
 def update_profile():
+    """Update user profile - Username AND Profile Picture"""
     username = request.form.get('username')
     
+    # Check if username was provided
     if not username:
         flash('Username is required', 'error')
         return redirect(url_for('dashboard.index'))
     
+    # Check if username already taken
     existing = User.query.filter(User.id != current_user.id, User.username == username).first()
     if existing:
         flash('Username already taken', 'error')
         return redirect(url_for('dashboard.index'))
     
+    # Update username
     current_user.username = username
+    
+    # Handle profile picture upload
+    if 'profile_pic' in request.files:
+        file = request.files['profile_pic']
+        if file and file.filename != '':
+            # Check file size (2MB max)
+            file.seek(0, os.SEEK_END)
+            size = file.tell()
+            file.seek(0)
+            
+            if size > 2 * 1024 * 1024:
+                flash('Profile picture must be less than 2MB', 'error')
+                return redirect(url_for('dashboard.index'))
+            
+            # Check file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if file.content_type not in allowed_types:
+                flash('Only JPG, PNG, GIF, and WEBP images are allowed', 'error')
+                return redirect(url_for('dashboard.index'))
+            
+            # Save file
+            filename = secure_filename(f"{current_user.id}_{int(datetime.now().timestamp())}_{file.filename}")
+            upload_folder = os.path.join('app', 'static', 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            filepath = os.path.join(upload_folder, filename)
+            file.save(filepath)
+            
+            # Delete old profile pic if exists
+            if current_user.profile_pic:
+                old_path = os.path.join(upload_folder, current_user.profile_pic)
+                if os.path.exists(old_path) and current_user.profile_pic != 'default.jpg':
+                    try:
+                        os.remove(old_path)
+                    except:
+                        pass
+            
+            current_user.profile_pic = filename
+            flash('Profile picture updated!', 'success')
+    
     db.session.commit()
     flash('Profile updated successfully!', 'success')
     return redirect(url_for('dashboard.index'))
@@ -186,6 +231,7 @@ def update_profile():
 @bp.route('/change-password', methods=['POST'])
 @login_required
 def change_password():
+    """Change user password"""
     current_pwd = request.form.get('current_password')
     new_pwd = request.form.get('new_password')
     confirm_pwd = request.form.get('confirm_password')
