@@ -15,13 +15,14 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
     
+    # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
     app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
     
-    # Email config
+    # Email config - Railway compatible
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
@@ -29,7 +30,7 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
     
-    # Register JSON filter for templates
+    # JSON filter for templates
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -44,9 +45,11 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
+    # Create upload folder
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
+    # Create admin user
     with app.app_context():
         try:
             from app import models
@@ -70,6 +73,7 @@ def create_app():
         except Exception as e:
             print(f"⚠️ Database error: {e}")
     
+    # Register blueprints
     from app.routes import auth, dashboard, projects, admin
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)

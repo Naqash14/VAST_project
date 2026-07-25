@@ -6,41 +6,93 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="alert alert-info">
-        <i class="fas fa-shield-alt me-2"></i>
-        Welcome to Admin Dashboard!
-    </div>
-    
     <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_users }}</h5>
-                    <p class="card-text">Total Users</p>
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-shield-alt me-2"></i>
+                Welcome to Admin Dashboard! You have full access.
+            </div>
+            
+            <!-- Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-primary">{{ total_users }}</h3>
+                            <p class="text-muted">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-success">{{ total_projects }}</h3>
+                            <p class="text-muted">Total Projects</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-warning">{{ total_scans }}</h3>
+                            <p class="text-muted">Total Scans</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-danger">{{ admin_users }}</h3>
+                            <p class="text-muted">Admin Users</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_projects }}</h5>
-                    <p class="card-text">Total Projects</p>
+            
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-users me-2"></i>Recent Users</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                {% for user in recent_users[:5] %}
+                                <li class="py-2 border-bottom">
+                                    <strong>{{ user.username }}</strong>
+                                    <span class="badge bg-{{ 'success' if user.is_verified else 'warning' }} ms-2">
+                                        {{ 'Verified' if user.is_verified else 'Pending' }}
+                                    </span>
+                                    <span class="badge bg-{{ 'primary' if user.is_admin else 'secondary' }} ms-1">
+                                        {{ 'Admin' if user.is_admin else 'User' }}
+                                    </span>
+                                    <small class="text-muted float-end">{{ user.created_at.strftime('%Y-%m-%d') }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-primary">View All</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_scans }}</h5>
-                    <p class="card-text">Total Scans</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ admin_users }}</h5>
-                    <p class="card-text">Admin Users</p>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-project-diagram me-2"></i>Recent Projects</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                {% for project in recent_projects[:5] %}
+                                <li class="py-2 border-bottom">
+                                    <strong>{{ project.project_name }}</strong>
+                                    <span class="badge bg-secondary ms-2">{{ project.scan_results|length }} scans</span>
+                                    <small class="text-muted float-end">{{ project.created_at.strftime('%Y-%m-%d') }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{{ url_for('admin.projects') }}" class="btn btn-sm btn-primary">View All</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
