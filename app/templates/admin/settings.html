@@ -6,77 +6,16 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Profile</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin.update_profile') }}" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control" name="profile_pic" accept="image/*">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="card shadow">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-key me-2"></i>Change Password</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin.change_password') }}">
-                        <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <input type="password" class="form-control" name="current_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" name="new_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" name="confirm_password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Change Password</button>
-                    </form>
-                </div>
-            </div>
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">Admin Settings</h5>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Info</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>User</span>
-                            <strong>{{ current_user.username }}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Email</span>
-                            <strong>{{ current_user.email }}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Role</span>
-                            <span class="badge bg-primary">Admin</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Joined</span>
-                            <strong>{{ current_user.created_at.strftime('%Y-%m-%d') }}</strong>
-                        </li>
-                    </ul>
-                </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Admin settings page. You can manage system configurations here.
             </div>
+            <p>Settings coming soon...</p>
         </div>
     </div>
 </div>

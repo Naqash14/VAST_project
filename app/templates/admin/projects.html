@@ -7,8 +7,8 @@
 {% block content %}
 <div class="container-fluid">
     <div class="card shadow">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>All Projects</h5>
+        <div class="card-header">
+            <h5 class="mb-0">All Projects</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -25,7 +25,7 @@
                     <tbody>
                         {% for project in projects %}
                         <tr>
-                            <td><strong>{{ project.project_name }}</strong></td>
+                            <td>{{ project.project_name }}</td>
                             <td>{{ project.owner.username if project.owner else 'Unknown' }}</td>
                             <td>{{ project.scan_results|length }}</td>
                             <td>{{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</td>

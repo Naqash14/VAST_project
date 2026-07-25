@@ -7,8 +7,8 @@
 {% block content %}
 <div class="container-fluid">
     <div class="card shadow">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="fas fa-users me-2"></i>All Users</h5>
+        <div class="card-header">
+            <h5 class="mb-0">All Users</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -26,7 +26,7 @@
                     <tbody>
                         {% for user in users %}
                         <tr>
-                            <td><strong>{{ user.username }}</strong></td>
+                            <td>{{ user.username }}</td>
                             <td>{{ user.email }}</td>
                             <td>
                                 {% if user.is_verified %}
@@ -45,7 +45,7 @@
                             <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-{{ 'warning' if user.is_admin else 'primary' }}">
+                                    <button type="submit" class="btn btn-sm btn-warning">
                                         {{ 'Remove Admin' if user.is_admin else 'Make Admin' }}
                                     </button>
                                 </form>
