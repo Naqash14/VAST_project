@@ -72,7 +72,7 @@ class AIPrioritizer:
 
     def _build_prompt(self, findings, language, context):
         findings_json = []
-        for f in findings:
+        for f in findings[:15]:
             findings_json.append({
                 "type": f.get('type', f.get('rule_id', 'unknown')),
                 "severity": f.get('severity', 'info'),
@@ -82,42 +82,29 @@ class AIPrioritizer:
                 "tool": f.get('tool', 'unknown')
             })
 
-        prompt = f"""You are a senior security expert. Analyze these vulnerabilities and provide:
-
-1. CVSS v3.1 base score (0.0-10.0)
-2. Priority: "Critical", "High", "Medium", or "Low"
-3. Remediation: EXACT CODE FIX - Show the line that needs to be changed, and what to change it to. Example format:
-   - BAD: os.system(user_input)
-   - FIX: subprocess.run(user_input.split(), shell=False)
-   - Always provide the exact code line fix!
-4. Exploitability: Brief note (1 sentence)
+        prompt = f"""You are a senior security expert. Analyze these vulnerabilities.
 
 Language: {language}
 Context: {context or 'General application'}
 
-Vulnerabilities found:
+Findings:
 {json.dumps(findings_json, indent=2)}
 
-IMPORTANT: For remediation, always provide EXACT CODE FIX with before/after examples.
+For EACH vulnerability provide:
+1. CVSS v3.1 score (0.0-10.0)
+2. Priority: Critical/High/Medium/Low
+3. Remediation recommendation
+4. Exploitability note
 
-Respond with ONLY valid JSON:
+Respond with ONLY valid JSON.
+
 {{
   "findings": [
-    {{
-      "id": 0,
-      "cvss_score": 9.8,
-      "priority": "Critical",
-      "remediation": "BAD: os.system(user_input)\\nFIX: subprocess.run([user_input], shell=False, capture_output=True)\\nALWAYS validate and sanitize user input.",
-      "exploitability": "Brief note"
-    }}
+    {{"id": 0, "cvss_score": 7.5, "priority": "High", "remediation": "...", "exploitability": "..."}}
   ],
   "summary": {{
-    "critical_count": 0,
-    "high_count": 0,
-    "medium_count": 0,
-    "low_count": 0,
-    "total": 0,
-    "overall_priority": "Summary here"
+    "critical_count": 0, "high_count": 0, "medium_count": 0, "low_count": 0,
+    "total": 0, "overall_priority": "..."
   }}
 }}"""
         return prompt
@@ -131,25 +118,22 @@ Respond with ONLY valid JSON:
 
             chat_completion = client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content": "You are a security expert. Always provide EXACT CODE FIXES with before/after examples. Be concise but specific."},
+                    {"role": "system", "content": "You are a security expert. Respond only with valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
                 model=self.model,
                 temperature=0.1,
-                max_tokens=2048,
+                max_tokens=1500,
                 timeout=self.timeout
             )
 
             elapsed = time.time() - start_time
             response_text = chat_completion.choices[0].message.content
             print(f"✅ Groq call took {elapsed:.1f}s, response length {len(response_text)} chars")
-            logger.info(f"Groq call took {elapsed:.1f}s, response length {len(response_text)} chars")
             return response_text
 
         except Exception as e:
-            elapsed = time.time() - start_time
-            print(f"❌ Groq call failed after {elapsed:.1f}s: {str(e)}")
-            logger.error(f"Groq API error: {str(e)}")
+            print(f"❌ Groq call failed: {str(e)}")
             return f"Error: {str(e)}"
 
     def _parse_response(self, response):
