@@ -7,30 +7,28 @@
 {% block extra_css %}
 <style>
     .analysis-buttons {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
+        display: flex;
+        gap: 20px;
         margin-bottom: 30px;
+        flex-wrap: wrap;
     }
     .btn-analysis {
+        flex: 1;
         padding: 20px;
         border-radius: 12px;
         text-align: center;
-        border: none;
         cursor: pointer;
         font-weight: 600;
         transition: all 0.3s ease;
         text-decoration: none;
         display: block;
-        color: white;
     }
-    .btn-analysis i { font-size: 28px; margin-bottom: 10px; display: block; }
-    .btn-static { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
-    .btn-symbolic { background: linear-gradient(135deg, #f8961e, #e85d04); }
-    .btn-fuzz { background: linear-gradient(135deg, #10b981, #059669); }
-    .btn-hybrid { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .btn-analysis i { font-size: 32px; margin-bottom: 10px; display: block; }
+    .btn-static { background: linear-gradient(135deg, #4361ee, #3a0ca3); color: white; }
+    .btn-symbolic { background: linear-gradient(135deg, #f8961e, #e85d04); color: white; }
+    .btn-fuzz { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .btn-hybrid { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
     .btn-analysis:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-    .btn-analysis small { opacity: 0.8; font-size: 11px; }
     
     .finding-card { border-left: 4px solid; margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; }
     .finding-card.critical { border-left-color: #dc3545; }
@@ -46,35 +44,17 @@
     .severity-low { background: #6c757d; color: white; }
     .severity-info { background: #17a2b8; color: white; }
     
-    .code-snippet { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px; font-size: 13px; overflow-x: auto; margin-top: 10px; }
-    
-    .stats-card { text-align: center; padding: 15px; border-radius: 10px; color: white; margin-bottom: 10px; }
-    .stats-card.critical { background: #dc3545; }
-    .stats-card.high { background: #fd7e14; }
-    .stats-card.medium { background: #ffc107; color: #212529; }
-    .stats-card.low { background: #6c757d; }
-    .stats-card.info { background: #17a2b8; }
-    .stats-number { font-size: 28px; font-weight: 800; }
-    .stats-label { font-size: 12px; }
-    
     .ai-section { background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 12px; padding: 25px; margin-top: 25px; }
     .ai-section h6 { color: #004085; margin-bottom: 15px; font-size: 16px; }
     .ai-finding { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4361ee; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .ai-finding .cvss { font-weight: bold; color: #4361ee; font-size: 16px; }
-    .ai-finding .priority-critical { color: #dc3545; font-weight: bold; font-size: 16px; }
-    .ai-finding .priority-high { color: #fd7e14; font-weight: bold; font-size: 16px; }
-    .ai-finding .priority-medium { color: #ffc107; font-weight: bold; font-size: 16px; }
-    .ai-finding .priority-low { color: #6c757d; font-weight: bold; font-size: 16px; }
-    .ai-finding .remediation { color: #28a745; margin-top: 8px; }
-    .ai-finding .exploitability { color: #6c757d; font-style: italic; margin-top: 8px; }
-    .ai-finding .full-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+    .priority-critical { color: #dc3545; font-weight: bold; font-size: 16px; }
+    .priority-high { color: #fd7e14; font-weight: bold; font-size: 16px; }
+    .priority-medium { color: #ffc107; font-weight: bold; font-size: 16px; }
+    .priority-low { color: #6c757d; font-weight: bold; font-size: 16px; }
+    .ai-finding .remediation { color: #28a745; margin-top: 8px; white-space: pre-wrap; }
+    .ai-finding .exploitability { color: #6c757d; font-style: italic; margin-top: 8px; white-space: pre-wrap; }
     .ai-summary-box { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    
-    .tool-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 10px; margin-left: 5px; }
-    .tool-badge.static { background: #4361ee; color: white; }
-    .tool-badge.symbolic { background: #f8961e; color: white; }
-    .tool-badge.fuzz { background: #10b981; color: white; }
-    .tool-badge.hybrid { background: #8b5cf6; color: white; }
 </style>
 {% endblock %}
 
@@ -92,33 +72,33 @@
                         </div>
                         <div>
                             <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary me-2"><i class="fas fa-plus"></i> New</a>
-                            <a href="{{ url_for('projects.existing') }}" class="btn btn-outline-secondary"><i class="fas fa-list"></i> All Projects</a>
+                            <a href="{{ url_for('projects.existing') }}" class="btn btn-outline-secondary"><i class="fas fa-list"></i> All</a>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Analysis Buttons - ALL 4 TYPES -->
+            <!-- Analysis Buttons -->
             <div class="analysis-buttons">
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='semgrep') }}" class="btn-analysis btn-static">
                     <i class="fas fa-search"></i>
                     <h5>Static</h5>
-                    <small>Semgrep - Pattern matching</small>
+                    <small>Semgrep - Pattern</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='symbolic') }}" class="btn-analysis btn-symbolic">
                     <i class="fas fa-brain"></i>
                     <h5>Symbolic</h5>
-                    <small>KLEE/Angr/JPF - Path exploration</small>
+                    <small>KLEE/Angr/JPF</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='fuzz') }}" class="btn-analysis btn-fuzz">
                     <i class="fas fa-random"></i>
                     <h5>Fuzz</h5>
-                    <small>libFuzzer/Atheris - Edge cases</small>
+                    <small>libFuzzer/Atheris</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='hybrid') }}" class="btn-analysis btn-hybrid">
                     <i class="fas fa-sync-alt"></i>
                     <h5>Hybrid</h5>
-                    <small>All techniques combined</small>
+                    <small>All combined</small>
                 </a>
             </div>
             
@@ -129,27 +109,8 @@
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-0">
-                                {% if 'hybrid' in result.tool %}
-                                    <i class="fas fa-sync-alt text-purple me-2"></i>
-                                {% elif 'semgrep' in result.tool or result.tool == 'semgrep' %}
-                                    <i class="fas fa-search text-primary me-2"></i>
-                                {% elif 'symbolic' in result.tool or 'KLEE' in result.tool or 'Angr' in result.tool or 'JPF' in result.tool %}
-                                    <i class="fas fa-brain text-warning me-2"></i>
-                                {% elif 'fuzz' in result.tool %}
-                                    <i class="fas fa-random text-success me-2"></i>
-                                {% else %}
-                                    <i class="fas fa-chart-line me-2"></i>
-                                {% endif %}
+                                <i class="fas fa-{{ 'search' if result.tool == 'semgrep' else 'brain' if 'symbolic' in result.tool else 'random' if result.tool == 'fuzz' else 'sync-alt' }} me-2"></i>
                                 {{ result.tool|upper }}
-                                {% if 'hybrid' in result.tool %}
-                                    <span class="tool-badge hybrid">All Tools</span>
-                                {% elif 'semgrep' in result.tool or result.tool == 'semgrep' %}
-                                    <span class="tool-badge static">Static</span>
-                                {% elif 'symbolic' in result.tool or 'KLEE' in result.tool or 'Angr' in result.tool or 'JPF' in result.tool %}
-                                    <span class="tool-badge symbolic">Symbolic</span>
-                                {% elif 'fuzz' in result.tool %}
-                                    <span class="tool-badge fuzz">Fuzz</span>
-                                {% endif %}
                             </h5>
                             <small class="text-muted">{{ result.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
                         </div>
@@ -157,7 +118,7 @@
                             <a href="{{ url_for('projects.download_report', scan_id=result.id) }}" class="btn btn-success btn-sm">
                                 <i class="fas fa-download"></i> Report
                             </a>
-                            <form method="POST" action="{{ url_for('projects.delete_scan', scan_id=result.id) }}" style="display: inline;" onsubmit="return confirm('Delete this scan?');">
+                            <form method="POST" action="{{ url_for('projects.delete_scan', scan_id=result.id) }}" style="display:inline;" onsubmit="return confirm('Delete?');">
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                             </form>
                         </div>
@@ -179,8 +140,8 @@
                                 {% endfor %}
                             </div>
                             
-                            <!-- Detailed Findings -->
-                            <h6 class="mb-3">Detailed Findings:</h6>
+                            <!-- Findings -->
+                            <h6 class="mb-3">Findings:</h6>
                             {% for finding in result.findings.details %}
                             <div class="finding-card {{ finding.severity }}">
                                 <div>
@@ -188,19 +149,15 @@
                                     <strong>{{ finding.message }}</strong>
                                     <small class="text-muted ms-2">Line {{ finding.line }}</small>
                                 </div>
-                                {% if finding.code_snippet %}
-                                <div class="code-snippet mt-2"><pre class="mb-0">{{ finding.code_snippet }}</pre></div>
-                                {% endif %}
                             </div>
                             {% endfor %}
                             
-                            <!-- AI Analysis Section -->
+                            <!-- AI Analysis -->
                             {% if result.ai_status == 'complete' and result.ai_analysis %}
                             {% set ai_data = result.ai_analysis|json_loads %}
                             {% if ai_data and ai_data.findings %}
                             <div class="ai-section">
-                                <h6><i class="fas fa-robot me-2"></i>AI-Powered Analysis</h6>
-                                
+                                <h6><i class="fas fa-robot me-2"></i>AI Analysis</h6>
                                 <div class="ai-summary-box">
                                     <div class="row">
                                         <div class="col-md-3"><strong>Critical:</strong> <span class="text-danger">{{ ai_data.summary.critical_count }}</span></div>
@@ -215,19 +172,11 @@
                                 <div class="ai-finding">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong>Finding #{{ ai_finding.id + 1 }}</strong>
-                                        <span class="cvss">CVSS Score: {{ ai_finding.cvss_score }}</span>
+                                        <span class="cvss">CVSS: {{ ai_finding.cvss_score }}</span>
                                     </div>
-                                    <div class="mb-2">
-                                        <span class="priority-{{ ai_finding.priority|lower }}">Priority: {{ ai_finding.priority }}</span>
-                                    </div>
-                                    <div class="remediation full-text">
-                                        <strong>Remediation:</strong><br>
-                                        {{ ai_finding.remediation }}
-                                    </div>
-                                    <div class="exploitability full-text">
-                                        <strong>Exploitability:</strong><br>
-                                        {{ ai_finding.exploitability }}
-                                    </div>
+                                    <div class="priority-{{ ai_finding.priority|lower }}">Priority: {{ ai_finding.priority }}</div>
+                                    <div class="remediation"><strong>Remediation:</strong><br>{{ ai_finding.remediation }}</div>
+                                    <div class="exploitability"><strong>Exploitability:</strong><br>{{ ai_finding.exploitability }}</div>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -237,8 +186,7 @@
                         {% else %}
                             <div class="text-center py-5">
                                 <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                                <h4>No Issues Found</h4>
-                                <p class="text-muted">No vulnerabilities detected by this analysis.</p>
+                                <h4>No Issues</h4>
                             </div>
                         {% endif %}
                     </div>
@@ -248,20 +196,13 @@
                 <div class="card shadow">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-search fa-4x text-muted mb-3"></i>
-                        <h4>No Scans Yet</h4>
-                        <p class="text-muted">Run analysis to see results</p>
+                        <h4>No Scans</h4>
                         <div class="mt-3">
                             <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='semgrep') }}" class="btn btn-primary me-2">
-                                <i class="fas fa-search me-1"></i> Static
+                                <i class="fas fa-search"></i> Static
                             </a>
-                            <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='symbolic') }}" class="btn btn-warning me-2">
-                                <i class="fas fa-brain me-1"></i> Symbolic
-                            </a>
-                            <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='fuzz') }}" class="btn btn-success me-2">
-                                <i class="fas fa-random me-1"></i> Fuzz
-                            </a>
-                            <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='hybrid') }}" class="btn btn-info">
-                                <i class="fas fa-sync-alt me-1"></i> Hybrid
+                            <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='symbolic') }}" class="btn btn-warning">
+                                <i class="fas fa-brain"></i> Symbolic
                             </a>
                         </div>
                     </div>
@@ -271,14 +212,3 @@
     </div>
 </div>
 {% endblock %}
-<!-- Add this after the symbolic button in scan.html -->
-<a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='fuzz') }}" class="btn-analysis btn-fuzz">
-    <i class="fas fa-random"></i>
-    <h5>Fuzz Testing</h5>
-    <small>libFuzzer - Edge case crashes</small>
-</a>
-<a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='hybrid') }}" class="btn-analysis btn-hybrid">
-    <i class="fas fa-sync-alt"></i>
-    <h5>Hybrid Analysis</h5>
-    <small>All tools combined</small>
-</a>
