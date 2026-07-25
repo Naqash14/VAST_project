@@ -7,12 +7,9 @@ from app.utils.email_service import send_otp_email
 from app.utils.otp_manager import OTPManager
 import re
 from datetime import datetime
-import threading
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
-print("🟢 Auth blueprint created")
 
-# ========== SIGNUP - STEP 1 ==========
 @bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -54,23 +51,12 @@ def signup():
         }
         session.permanent = True
         
-        print(f"\n🔵 SIGNUP - Session set for: {email}")
-        
-        # Generate OTP and send in background
+        # Generate OTP
         otp_code = OTPManager.create_otp(email)
         
         if otp_code:
-            # Send email in background thread (doesn't block response)
-            def send_email_background():
-                try:
-                    send_otp_email(email, otp_code)
-                    print(f"📧 OTP email sent to {email}")
-                except Exception as e:
-                    print(f"❌ Email send failed: {e}")
-            
-            thread = threading.Thread(target=send_email_background)
-            thread.daemon = True
-            thread.start()
+            # Send email (non-blocking)
+            send_otp_email(email, otp_code)
             
             flash('OTP sent to your email. Please verify.', 'success')
             return redirect(url_for('auth.verify_otp', email=email))
@@ -80,13 +66,17 @@ def signup():
     
     return render_template('auth/signup.html')
 
-# ========== VERIFY OTP - STEP 2 ==========
 @bp.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
     email = request.args.get('email') or request.form.get('email')
     
     if not email:
         return redirect(url_for('auth.signup'))
+    
+    # Show OTP in console for debugging
+    otp_record = OTP.query.filter_by(email=email, is_used=False).first()
+    if otp_record:
+        print(f"\n🔑 Current OTP for {email}: {otp_record.otp_code}\n")
     
     if request.method == 'POST':
         otp_code = request.form.get('otp')
@@ -132,7 +122,6 @@ def verify_otp():
     
     return render_template('auth/verify_otp.html', email=email)
 
-# ========== RESEND OTP ==========
 @bp.route('/resend-otp', methods=['POST'])
 def resend_otp():
     email = request.form.get('email')
@@ -143,23 +132,11 @@ def resend_otp():
     otp_code = OTPManager.create_otp(email)
     
     if otp_code:
-        # Send in background
-        import threading
-        def send_email_background():
-            try:
-                send_otp_email(email, otp_code)
-            except Exception as e:
-                print(f"❌ Email send failed: {e}")
-        
-        thread = threading.Thread(target=send_email_background)
-        thread.daemon = True
-        thread.start()
-        
+        send_otp_email(email, otp_code)
         return jsonify({'success': True, 'message': 'New OTP sent'})
     else:
         return jsonify({'success': False, 'message': 'Failed to generate OTP'}), 500
 
-# ========== LOGIN ==========
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -186,7 +163,6 @@ def login():
     
     return render_template('auth/login.html')
 
-# ========== LOGOUT ==========
 @bp.route('/logout')
 @login_required
 def logout():
