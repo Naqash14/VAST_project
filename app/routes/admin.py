@@ -5,11 +5,12 @@ from app.models import User, Project, ScanResult
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+from functools import wraps
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 def admin_required(f):
-    from functools import wraps
+    """Decorator to check if user is admin"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
@@ -22,6 +23,7 @@ def admin_required(f):
 @login_required
 @admin_required
 def dashboard():
+    """Admin Dashboard"""
     total_users = User.query.count()
     total_projects = Project.query.count()
     total_scans = ScanResult.query.count()
@@ -49,6 +51,7 @@ def dashboard():
 @login_required
 @admin_required
 def users():
+    """Manage users"""
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users.html', users=users, now=datetime.now())
 
@@ -57,6 +60,7 @@ def users():
 @admin_required
 def toggle_admin(user_id):
     user = User.query.get_or_404(user_id)
+    
     if user.id == current_user.id:
         flash('Cannot change your own admin status', 'error')
         return redirect(url_for('admin.users'))
@@ -73,12 +77,14 @@ def toggle_admin(user_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
+    
     if user.id == current_user.id:
         flash('Cannot delete your own account', 'error')
         return redirect(url_for('admin.users'))
     
     db.session.delete(user)
     db.session.commit()
+    
     flash(f'User {user.username} deleted', 'success')
     return redirect(url_for('admin.users'))
 
@@ -96,7 +102,8 @@ def delete_project(project_id):
     project = Project.query.get_or_404(project_id)
     db.session.delete(project)
     db.session.commit()
-    flash(f'Project deleted', 'success')
+    
+    flash(f'Project {project.project_name} deleted', 'success')
     return redirect(url_for('admin.projects'))
 
 @bp.route('/scans')
@@ -113,68 +120,72 @@ def delete_scan(scan_id):
     scan = ScanResult.query.get_or_404(scan_id)
     db.session.delete(scan)
     db.session.commit()
+    
     flash('Scan deleted', 'success')
     return redirect(url_for('admin.scans'))
 
-@bp.route('/settings', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def settings():
-    """Admin Settings - Profile and Password Management"""
-    if request.method == 'POST':
-        action = request.form.get('action')
-        
-        if action == 'update_profile':
-            username = request.form.get('username')
-            if username:
-                existing = User.query.filter(User.id != current_user.id, User.username == username).first()
-                if existing:
-                    flash('Username already taken', 'error')
-                else:
-                    current_user.username = username
-                    
-                    if 'profile_pic' in request.files:
-                        file = request.files['profile_pic']
-                        if file and file.filename != '':
-                            filename = secure_filename(f"{current_user.id}_{file.filename}")
-                            upload_folder = os.path.join('app', 'static', 'uploads')
-                            os.makedirs(upload_folder, exist_ok=True)
-                            filepath = os.path.join(upload_folder, filename)
-                            file.save(filepath)
-                            current_user.profile_pic = filename
-                    
-                    db.session.commit()
-                    flash('Profile updated successfully!', 'success')
-            
-            return redirect(url_for('admin.settings'))
-        
-        elif action == 'change_password':
-            from app.utils.security import check_password_strength
-            
-            current_pwd = request.form.get('current_password')
-            new_pwd = request.form.get('new_password')
-            confirm_pwd = request.form.get('confirm_password')
-            
-            if not current_user.check_password(current_pwd):
-                flash('Current password is incorrect', 'error')
-            elif new_pwd != confirm_pwd:
-                flash('New passwords do not match', 'error')
-            else:
-                strength, _, _ = check_password_strength(new_pwd)
-                if strength == 'weak':
-                    flash('Password too weak. Use a stronger password.', 'error')
-                else:
-                    current_user.set_password(new_pwd)
-                    db.session.commit()
-                    flash('Password changed successfully!', 'success')
-            
-            return redirect(url_for('admin.settings'))
-    
-    return render_template('admin/settings.html', now=datetime.now())
-
+# ===== SETTINGS ROUTE - ONLY ONE =====
 @bp.route('/settings')
 @login_required
 @admin_required
 def settings():
-    """Admin settings page"""
+    """Admin settings"""
     return render_template('admin/settings.html', now=datetime.now())
+
+# ===== PROFILE UPDATE - WORKS FOR ALL USERS =====
+@bp.route('/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    username = request.form.get('username')
+    
+    if not username:
+        flash('Username is required', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    existing = User.query.filter(User.id != current_user.id, User.username == username).first()
+    if existing:
+        flash('Username already taken', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    current_user.username = username
+    
+    if 'profile_pic' in request.files:
+        file = request.files['profile_pic']
+        if file and file.filename != '':
+            filename = secure_filename(f"{current_user.id}_{file.filename}")
+            upload_folder = os.path.join('app', 'static', 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            filepath = os.path.join(upload_folder, filename)
+            file.save(filepath)
+            current_user.profile_pic = filename
+    
+    db.session.commit()
+    flash('Profile updated successfully!', 'success')
+    return redirect(url_for('dashboard.index'))
+
+@bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    from app.utils.security import check_password_strength
+    
+    current_pwd = request.form.get('current_password')
+    new_pwd = request.form.get('new_password')
+    confirm_pwd = request.form.get('confirm_password')
+    
+    if not current_user.check_password(current_pwd):
+        flash('Current password is incorrect', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    if new_pwd != confirm_pwd:
+        flash('New passwords do not match', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    strength, msg, _ = check_password_strength(new_pwd)
+    if strength == 'weak':
+        flash('Password too weak. Use a stronger password.', 'error')
+        return redirect(url_for('dashboard.index'))
+    
+    current_user.set_password(new_pwd)
+    db.session.commit()
+    flash('Password changed successfully!', 'success')
+    return redirect(url_for('dashboard.index'))
