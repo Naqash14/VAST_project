@@ -1,34 +1,20 @@
 # Gunicorn configuration for Railway
-import multiprocessing
 
-# Server socket
 bind = "0.0.0.0:8080"
-backlog = 2048
-
-# Worker processes
 workers = 2
-worker_class = 'sync'
-worker_connections = 1000
-timeout = 120  # Increased timeout
+worker_class = "sync"
+timeout = 120  # Increased from 30 to 120 seconds
+graceful_timeout = 30
 keepalive = 2
 
 # Logging
-accesslog = '-'
-errorlog = '-'
-loglevel = 'info'
-
-# Process naming
-proc_name = 'vast_scanner'
-
-# Server mechanics
-daemon = False
-pidfile = None
-umask = 0
-user = None
-group = None
+accesslog = "-"
+errorlog = "-"
+loglevel = "info"
 
 # Preload app
 preload_app = True
 
-# Graceful timeout
-graceful_timeout = 30
+# Max requests before worker restart (prevents memory leaks)
+max_requests = 1000
+max_requests_jitter = 100

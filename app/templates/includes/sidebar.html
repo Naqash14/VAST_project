@@ -95,41 +95,47 @@
                 </div>
             </a>
             
-            <div class="nav-item tool-item coming">
+            <a href="{{ url_for('projects.create') }}" class="nav-item tool-item" onclick="selectAnalysisType('fuzz')">
                 <i class="fas fa-random"></i>
                 <span>Fuzz Testing</span>
-                <span class="coming-badge">Soon</span>
-            </div>
+                <span class="tool-tag libfuzzer">libFuzzer</span>
+            </a>
+            
+            <a href="{{ url_for('projects.create') }}" class="nav-item tool-item" onclick="selectAnalysisType('hybrid')">
+                <i class="fas fa-sync-alt"></i>
+                <span>Hybrid Analysis</span>
+                <span class="tool-tag hybrid">Combined</span>
+            </a>
         </div>
 
-        <!-- Admin Section - Only for admin users -->
+        <!-- Admin Section -->
         {% if current_user.is_admin %}
         <div class="nav-section">
-            <div class="nav-section-title" style="color: #f59e0b;">ADMIN PANEL</div>
+            <div class="nav-section-title">ADMIN PANEL</div>
             
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" style="border-left-color: {% if request.endpoint == 'admin.dashboard' %}#f59e0b{% else %}transparent{% endif %};">
-                <i class="fas fa-shield-alt" style="color: #f59e0b;"></i>
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="fas fa-shield-alt"></i>
                 <span>Admin Dashboard</span>
-                <span class="badge" style="background: #f59e0b; color: #1e293b;">Admin</span>
+                <span class="badge bg-danger">Admin</span>
             </a>
             
             <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
-                <i class="fas fa-users" style="color: #f59e0b;"></i>
+                <i class="fas fa-users"></i>
                 <span>Manage Users</span>
             </a>
             
             <a href="{{ url_for('admin.projects') }}" class="nav-item {% if request.endpoint == 'admin.projects' %}active{% endif %}">
-                <i class="fas fa-project-diagram" style="color: #f59e0b;"></i>
+                <i class="fas fa-project-diagram"></i>
                 <span>All Projects</span>
             </a>
             
             <a href="{{ url_for('admin.scans') }}" class="nav-item {% if request.endpoint == 'admin.scans' %}active{% endif %}">
-                <i class="fas fa-search" style="color: #f59e0b;"></i>
+                <i class="fas fa-search"></i>
                 <span>All Scans</span>
             </a>
             
             <a href="{{ url_for('admin.settings') }}" class="nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
-                <i class="fas fa-cog" style="color: #f59e0b;"></i>
+                <i class="fas fa-cog"></i>
                 <span>Admin Settings</span>
             </a>
         </div>
@@ -181,7 +187,7 @@
 .nav-item i { width: 24px; font-size: 18px; margin-right: 12px; color: #3b82f6; }
 .nav-item span { flex: 1; font-size: 13px; font-weight: 500; }
 .nav-item .badge { background: rgba(59,130,246,0.2); padding: 2px 8px; border-radius: 20px; font-size: 10px; color: #60a5fa; }
-.nav-item .badge.bg-primary { background: #f59e0b; color: #1e293b; }
+.nav-item .badge.bg-danger { background: #dc3545; color: white; }
 
 .tool-item { cursor: pointer; }
 .tool-item.coming { opacity: 0.5; cursor: not-allowed; }
@@ -190,18 +196,14 @@
 .tool-tag.klee { background: rgba(16,185,129,0.2); color: #34d399; }
 .tool-tag.angr { background: rgba(139,92,246,0.2); color: #a78bfa; }
 .tool-tag.jpf { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.tool-tag.libfuzzer { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.tool-tag.hybrid { background: rgba(139,92,246,0.2); color: #a78bfa; }
 .tool-group { display: flex; gap: 4px; margin-left: 8px; }
-.coming-badge { font-size: 9px; padding: 2px 8px; background: rgba(100,116,139,0.3); border-radius: 12px; color: #94a3b8; margin-left: 8px; }
 
 .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
 .security-status { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: #64748b; }
 .security-status i:first-child { color: #3b82f6; }
 .security-status i:last-child { color: #10b981; }
-
-/* Scrollbar */
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-.sidebar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
 </style>
 
 <script>
@@ -211,15 +213,15 @@ function toggleProfileMenu() {
 }
 
 function openEditProfile() {
-    window.location.href = "{{ url_for('admin.settings') }}";
+    alert('Edit Profile feature - go to Settings');
 }
 
 function openChangePassword() {
-    window.location.href = "{{ url_for('admin.settings') }}";
+    alert('Change Password feature - go to Settings');
 }
 
 function openUploadProfilePic() {
-    window.location.href = "{{ url_for('admin.settings') }}";
+    alert('Upload Profile Pic feature - go to Settings');
 }
 
 function selectAnalysisType(type) {
@@ -229,7 +231,6 @@ function selectAnalysisType(type) {
     }
 }
 
-// Close menu when clicking outside
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('profileMenu');
     const userSection = document.querySelector('.user-section');

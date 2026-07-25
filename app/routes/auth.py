@@ -7,41 +7,43 @@ from app.utils.email_service import send_otp_email
 from app.utils.otp_manager import OTPManager
 import re
 from datetime import datetime
+import threading
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+print("🟢 Auth blueprint created")
 
+# ========== SIGNUP - STEP 1 ==========
 @bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-        confirm = request.form.get('confirm_password')
+        confirm_password = request.form.get('confirm_password')
         
-        # Validation
-        if not all([username, email, password, confirm]):
-            flash('All fields required', 'error')
+        if not all([username, email, password, confirm_password]):
+            flash('All fields are required', 'error')
             return redirect(url_for('auth.signup'))
         
-        if password != confirm:
+        if password != confirm_password:
             flash('Passwords do not match', 'error')
             return redirect(url_for('auth.signup'))
         
-        strength, _, _ = check_password_strength(password)
+        strength, msg, _ = check_password_strength(password)
         if strength == 'weak':
-            flash('Password too weak', 'error')
+            flash('Password too weak. Use a stronger password.', 'error')
             return redirect(url_for('auth.signup'))
         
         if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
-            flash('Invalid email', 'error')
+            flash('Invalid email format', 'error')
             return redirect(url_for('auth.signup'))
         
         if User.query.filter_by(username=username).first():
-            flash('Username exists', 'error')
+            flash('Username already exists', 'error')
             return redirect(url_for('auth.signup'))
         
         if User.query.filter_by(email=email).first():
-            flash('Email exists', 'error')
+            flash('Email already registered', 'error')
             return redirect(url_for('auth.signup'))
         
         # Store in session
@@ -50,12 +52,26 @@ def signup():
             'email': email,
             'password': password
         }
+        session.permanent = True
         
-        # Generate OTP
+        print(f"\n🔵 SIGNUP - Session set for: {email}")
+        
+        # Generate OTP and send in background
         otp_code = OTPManager.create_otp(email)
         
         if otp_code:
-            send_otp_email(email, otp_code)
+            # Send email in background thread (doesn't block response)
+            def send_email_background():
+                try:
+                    send_otp_email(email, otp_code)
+                    print(f"📧 OTP email sent to {email}")
+                except Exception as e:
+                    print(f"❌ Email send failed: {e}")
+            
+            thread = threading.Thread(target=send_email_background)
+            thread.daemon = True
+            thread.start()
+            
             flash('OTP sent to your email. Please verify.', 'success')
             return redirect(url_for('auth.verify_otp', email=email))
         else:
@@ -64,70 +80,86 @@ def signup():
     
     return render_template('auth/signup.html')
 
+# ========== VERIFY OTP - STEP 2 ==========
 @bp.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
-    email = request.args.get('email')
+    email = request.args.get('email') or request.form.get('email')
     
     if not email:
         return redirect(url_for('auth.signup'))
     
     if request.method == 'POST':
-        otp = request.form.get('otp')
+        otp_code = request.form.get('otp')
         email = request.form.get('email')
         
-        if not otp or len(otp) != 6:
-            flash('Enter 6-digit OTP', 'error')
+        if not otp_code or len(otp_code) != 6:
+            flash('Please enter 6-digit OTP', 'error')
             return redirect(url_for('auth.verify_otp', email=email))
         
-        valid, message = OTPManager.verify_otp(email, otp)
+        valid, message = OTPManager.verify_otp(email, otp_code)
         
         if valid:
             pending = session.get('pending_user')
             
             if pending and pending['email'] == email:
-                user = User(
-                    username=pending['username'],
-                    email=pending['email'],
-                    is_verified=True
-                )
-                user.set_password(pending['password'])
-                
-                db.session.add(user)
-                db.session.commit()
-                
-                session.pop('pending_user', None)
-                
-                flash('Account created! Please login.', 'success')
-                return redirect(url_for('auth.login'))
+                try:
+                    user = User(
+                        username=pending['username'],
+                        email=pending['email'],
+                        is_verified=True
+                    )
+                    user.set_password(pending['password'])
+                    
+                    db.session.add(user)
+                    db.session.commit()
+                    
+                    session.pop('pending_user', None)
+                    
+                    flash('Email verified! You can now login.', 'success')
+                    return redirect(url_for('auth.login'))
+                    
+                except Exception as e:
+                    print(f"❌ Error creating user: {e}")
+                    db.session.rollback()
+                    flash('Error creating account. Try again.', 'error')
+                    return redirect(url_for('auth.signup'))
             else:
-                flash('Session expired. Register again.', 'error')
+                flash('Session expired. Please register again.', 'error')
                 return redirect(url_for('auth.signup'))
         else:
             flash(message, 'error')
             return redirect(url_for('auth.verify_otp', email=email))
     
-    # Show OTP in console for debugging
-    otp_record = OTP.query.filter_by(email=email, is_used=False).first()
-    if otp_record:
-        print(f"\n🔑 OTP for {email}: {otp_record.otp_code}\n")
-    
     return render_template('auth/verify_otp.html', email=email)
 
+# ========== RESEND OTP ==========
 @bp.route('/resend-otp', methods=['POST'])
 def resend_otp():
     email = request.form.get('email')
     
     if not email:
-        return jsonify({'success': False, 'message': 'Email required'})
+        return jsonify({'success': False, 'message': 'Email required'}), 400
     
     otp_code = OTPManager.create_otp(email)
     
     if otp_code:
-        send_otp_email(email, otp_code)
-        return jsonify({'success': True, 'message': 'OTP resent'})
+        # Send in background
+        import threading
+        def send_email_background():
+            try:
+                send_otp_email(email, otp_code)
+            except Exception as e:
+                print(f"❌ Email send failed: {e}")
+        
+        thread = threading.Thread(target=send_email_background)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({'success': True, 'message': 'New OTP sent'})
     else:
-        return jsonify({'success': False, 'message': 'Failed'})
+        return jsonify({'success': False, 'message': 'Failed to generate OTP'}), 500
 
+# ========== LOGIN ==========
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -149,14 +181,15 @@ def login():
             return redirect(url_for('auth.verify_otp', email=email))
         
         login_user(user, remember=bool(remember))
-        flash(f'Welcome {user.username}!', 'success')
+        flash(f'Welcome back, {user.username}!', 'success')
         return redirect(url_for('dashboard.index'))
     
     return render_template('auth/login.html')
 
+# ========== LOGOUT ==========
 @bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('Logged out', 'info')
+    flash('You have been logged out', 'info')
     return redirect(url_for('auth.login'))

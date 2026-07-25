@@ -16,7 +16,13 @@ def create_app():
     app = Flask(__name__)
     
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
+    
+    # Database - PostgreSQL or SQLite
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///vast.db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'app/uploads')
     app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
@@ -29,6 +35,7 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
     
+    # JSON filter for templates
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -66,9 +73,6 @@ def create_app():
                 db.session.add(admin)
                 db.session.commit()
                 print("✅ Admin user created: admin / Admin@123")
-            else:
-                print("✅ Admin user already exists")
-                
         except Exception as e:
             print(f"⚠️ Database error: {e}")
     
