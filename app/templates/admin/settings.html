@@ -1,21 +1,155 @@
 {% extends "layout/base.html" %}
 
-{% block title %}Admin Settings{% endblock %}
+{% block title %}Admin Settings - VAST{% endblock %}
 
 {% block page_title %}Admin Settings{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="card shadow">
-        <div class="card-header">
-            <h5 class="mb-0">Admin Settings</h5>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                Admin settings page. You can manage system configurations here.
+    <div class="row">
+        <!-- Profile Section -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.update_profile') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                            <small class="text-muted">Email cannot be changed</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if current_user.profile_pic %}
+                                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" 
+                                     style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #4361ee;">
+                                {% else %}
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #6c757d;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <input type="file" class="form-control" name="profile_pic" accept="image/*">
+                                    <small class="text-muted">JPG, PNG or GIF (Max 2MB)</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                    </form>
+                </div>
             </div>
-            <p>Settings coming soon...</p>
+        </div>
+        
+        <!-- Password Section -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-key me-2"></i>Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.change_password') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="new_password" required>
+                            <div class="form-text">Minimum 8 characters with letters, numbers, and special characters</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Info Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Admin Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Username:</strong></td>
+                            <td>{{ current_user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ current_user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Role:</strong></td>
+                            <td><span class="badge bg-primary">Administrator</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Joined:</strong></td>
+                            <td>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Status:</strong></td>
+                            <td><span class="badge bg-success">Verified</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Info</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Version:</strong></td>
+                            <td>VAST Scanner v2.0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Environment:</strong></td>
+                            <td><span class="badge bg-info">Production</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Database:</strong></td>
+                            <td>SQLite</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI Model:</strong></td>
+                            <td>Groq - llama-3.3-70b-versatile</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Static Analysis:</strong></td>
+                            <td>Semgrep</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Symbolic Analysis:</strong></td>
+                            <td>KLEE / Angr / JPF</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>

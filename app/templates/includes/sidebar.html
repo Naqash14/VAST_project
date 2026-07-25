@@ -1,30 +1,240 @@
-<!-- Admin section in sidebar - make sure this exists -->
-<div class="nav-section">
-    <div class="nav-section-title">ADMIN</div>
-    
-    <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-        <i class="fas fa-shield-alt"></i>
-        <span>Admin Dashboard</span>
-        <span class="badge bg-danger">Admin</span>
-    </a>
-    
-    <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
-        <i class="fas fa-users"></i>
-        <span>Manage Users</span>
-    </a>
-    
-    <a href="{{ url_for('admin.projects') }}" class="nav-item {% if request.endpoint == 'admin.projects' %}active{% endif %}">
-        <i class="fas fa-project-diagram"></i>
-        <span>All Projects</span>
-    </a>
-    
-    <a href="{{ url_for('admin.scans') }}" class="nav-item {% if request.endpoint == 'admin.scans' %}active{% endif %}">
-        <i class="fas fa-search"></i>
-        <span>All Scans</span>
-    </a>
-    
-    <a href="{{ url_for('admin.settings') }}" class="nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
-        <i class="fas fa-cog"></i>
-        <span>Admin Settings</span>
-    </a>
+<div class="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+        <a href="{{ url_for('dashboard.index') }}" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-shield-alt" style="font-size: 32px; color: #3b82f6; background: rgba(59, 130, 246, 0.15); padding: 10px; border-radius: 14px;"></i>
+            <div>
+                <span style="font-size: 20px; font-weight: 700; color: white; display: block;">VAST Scanner</span>
+                <small style="font-size: 10px; color: #94a3b8; display: block;">Professional Security Analysis</small>
+            </div>
+        </a>
+    </div>
+
+    <!-- User Profile Section -->
+    <div class="user-section" onclick="toggleProfileMenu()">
+        <div class="user-avatar">
+            {% if current_user.profile_pic %}
+            <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" alt="Profile" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+            <i class="fas fa-user-circle"></i>
+            {% endif %}
+        </div>
+        <div class="user-details">
+            <div class="user-name">{{ current_user.username }}</div>
+            <div class="user-email">{{ current_user.email }}</div>
+            <div class="user-badge verified">
+                <i class="fas fa-check-circle"></i> Verified
+                {% if current_user.is_admin %}
+                <span class="badge bg-primary ms-1">Admin</span>
+                {% endif %}
+            </div>
+        </div>
+        <i class="fas fa-chevron-down profile-arrow"></i>
+    </div>
+
+    <!-- Profile Dropdown Menu -->
+    <div class="profile-menu" id="profileMenu">
+        <a href="#" onclick="openEditProfile()">
+            <i class="fas fa-user-edit"></i> Edit Profile
+        </a>
+        <a href="#" onclick="openChangePassword()">
+            <i class="fas fa-key"></i> Change Password
+        </a>
+        <a href="#" onclick="openUploadProfilePic()">
+            <i class="fas fa-image"></i> Update Profile Pic
+        </a>
+        <div class="divider"></div>
+        <a href="{{ url_for('auth.logout') }}" class="logout-item">
+            <i class="fas fa-sign-out-alt"></i> Sign Out
+        </a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">MAIN</div>
+            
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('projects.create') }}" class="nav-item {% if request.endpoint == 'projects.create' %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Scan</span>
+            </a>
+            
+            <a href="{{ url_for('projects.existing') }}" class="nav-item {% if request.endpoint == 'projects.existing' %}active{% endif %}">
+                <i class="fas fa-folder-open"></i>
+                <span>Projects</span>
+                <span class="badge">{{ current_user.projects|length }}</span>
+            </a>
+            
+            <a href="{{ url_for('dashboard.history') }}" class="nav-item {% if request.endpoint == 'dashboard.history' %}active{% endif %}">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">ANALYSIS TOOLS</div>
+            
+            <a href="{{ url_for('projects.create') }}" class="nav-item tool-item" onclick="selectAnalysisType('semgrep')">
+                <i class="fas fa-search"></i>
+                <span>Static Analysis</span>
+                <span class="tool-tag semgrep">Semgrep</span>
+            </a>
+            
+            <a href="{{ url_for('projects.create') }}" class="nav-item tool-item" onclick="selectAnalysisType('symbolic')">
+                <i class="fas fa-brain"></i>
+                <span>Symbolic Analysis</span>
+                <div class="tool-group">
+                    <span class="tool-tag klee">KLEE</span>
+                    <span class="tool-tag angr">Angr</span>
+                    <span class="tool-tag jpf">JPF</span>
+                </div>
+            </a>
+            
+            <div class="nav-item tool-item coming">
+                <i class="fas fa-random"></i>
+                <span>Fuzz Testing</span>
+                <span class="coming-badge">Soon</span>
+            </div>
+        </div>
+
+        <!-- Admin Section - Only for admin users -->
+        {% if current_user.is_admin %}
+        <div class="nav-section">
+            <div class="nav-section-title" style="color: #f59e0b;">ADMIN PANEL</div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" style="border-left-color: {% if request.endpoint == 'admin.dashboard' %}#f59e0b{% else %}transparent{% endif %};">
+                <i class="fas fa-shield-alt" style="color: #f59e0b;"></i>
+                <span>Admin Dashboard</span>
+                <span class="badge" style="background: #f59e0b; color: #1e293b;">Admin</span>
+            </a>
+            
+            <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                <i class="fas fa-users" style="color: #f59e0b;"></i>
+                <span>Manage Users</span>
+            </a>
+            
+            <a href="{{ url_for('admin.projects') }}" class="nav-item {% if request.endpoint == 'admin.projects' %}active{% endif %}">
+                <i class="fas fa-project-diagram" style="color: #f59e0b;"></i>
+                <span>All Projects</span>
+            </a>
+            
+            <a href="{{ url_for('admin.scans') }}" class="nav-item {% if request.endpoint == 'admin.scans' %}active{% endif %}">
+                <i class="fas fa-search" style="color: #f59e0b;"></i>
+                <span>All Scans</span>
+            </a>
+            
+            <a href="{{ url_for('admin.settings') }}" class="nav-item {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                <i class="fas fa-cog" style="color: #f59e0b;"></i>
+                <span>Admin Settings</span>
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <div class="security-status">
+            <i class="fas fa-shield-alt"></i>
+            <span>Secure Connection</span>
+            <i class="fas fa-lock"></i>
+        </div>
+    </div>
 </div>
+
+<style>
+.sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; overflow-y: auto; box-shadow: 4px 0 20px rgba(0,0,0,0.2); z-index: 1000; }
+.sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo i { font-size: 32px; color: #3b82f6; background: rgba(59,130,246,0.15); padding: 10px; border-radius: 14px; }
+.sidebar-logo span { font-size: 20px; font-weight: 700; color: white; display: block; }
+.sidebar-logo small { font-size: 10px; color: #94a3b8; display: block; }
+
+.user-section { padding: 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.2s ease; position: relative; }
+.user-section:hover { background: rgba(59,130,246,0.1); }
+.user-avatar i, .user-avatar img { width: 48px; height: 48px; font-size: 48px; color: #3b82f6; border-radius: 50%; object-fit: cover; }
+.user-details { flex: 1; overflow: hidden; }
+.user-name { font-weight: 600; font-size: 14px; color: white; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-email { font-size: 11px; color: #94a3b8; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; padding: 2px 8px; background: rgba(16,185,129,0.2); color: #34d399; border-radius: 20px; }
+.profile-arrow { font-size: 12px; color: #64748b; transition: transform 0.2s ease; }
+.user-section:hover .profile-arrow { transform: rotate(180deg); }
+
+.profile-menu { position: absolute; top: 100px; left: 20px; right: 20px; background: #1e293b; border-radius: 12px; padding: 8px 0; z-index: 1001; display: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+.profile-menu.show { display: block; }
+.profile-menu a { display: flex; align-items: center; gap: 12px; padding: 10px 16px; color: #e2e8f0; text-decoration: none; font-size: 13px; transition: all 0.2s ease; }
+.profile-menu a:hover { background: rgba(59,130,246,0.2); color: white; }
+.profile-menu a i { width: 20px; font-size: 14px; color: #3b82f6; }
+.profile-menu .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 6px 0; }
+.profile-menu .logout-item { color: #f87171; }
+.profile-menu .logout-item i { color: #f87171; }
+
+.sidebar-nav { flex: 1; padding: 20px 0; }
+.nav-section { margin-bottom: 24px; }
+.nav-section-title { padding: 0 20px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+.nav-item { display: flex; align-items: center; padding: 10px 20px; color: #cbd5e1; text-decoration: none; transition: all 0.2s ease; border-left: 3px solid transparent; margin: 2px 0; }
+.nav-item:hover { background: rgba(59,130,246,0.1); color: white; border-left-color: #3b82f6; }
+.nav-item.active { background: rgba(59,130,246,0.15); color: white; border-left-color: #3b82f6; }
+.nav-item i { width: 24px; font-size: 18px; margin-right: 12px; color: #3b82f6; }
+.nav-item span { flex: 1; font-size: 13px; font-weight: 500; }
+.nav-item .badge { background: rgba(59,130,246,0.2); padding: 2px 8px; border-radius: 20px; font-size: 10px; color: #60a5fa; }
+.nav-item .badge.bg-primary { background: #f59e0b; color: #1e293b; }
+
+.tool-item { cursor: pointer; }
+.tool-item.coming { opacity: 0.5; cursor: not-allowed; }
+.tool-tag { font-size: 9px; padding: 2px 8px; border-radius: 12px; margin-left: 6px; }
+.tool-tag.semgrep { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.tool-tag.klee { background: rgba(16,185,129,0.2); color: #34d399; }
+.tool-tag.angr { background: rgba(139,92,246,0.2); color: #a78bfa; }
+.tool-tag.jpf { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.tool-group { display: flex; gap: 4px; margin-left: 8px; }
+.coming-badge { font-size: 9px; padding: 2px 8px; background: rgba(100,116,139,0.3); border-radius: 12px; color: #94a3b8; margin-left: 8px; }
+
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
+.security-status { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: #64748b; }
+.security-status i:first-child { color: #3b82f6; }
+.security-status i:last-child { color: #10b981; }
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+.sidebar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+</style>
+
+<script>
+function toggleProfileMenu() {
+    const menu = document.getElementById('profileMenu');
+    menu.classList.toggle('show');
+}
+
+function openEditProfile() {
+    window.location.href = "{{ url_for('admin.settings') }}";
+}
+
+function openChangePassword() {
+    window.location.href = "{{ url_for('admin.settings') }}";
+}
+
+function openUploadProfilePic() {
+    window.location.href = "{{ url_for('admin.settings') }}";
+}
+
+function selectAnalysisType(type) {
+    const scannerType = document.getElementById('scannerType');
+    if (scannerType) {
+        scannerType.value = type;
+    }
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('profileMenu');
+    const userSection = document.querySelector('.user-section');
+    if (menu && userSection && !userSection.contains(event.target) && !menu.contains(event.target)) {
+        menu.classList.remove('show');
+    }
+});
+</script>
