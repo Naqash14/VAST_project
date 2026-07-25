@@ -12,8 +12,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
-    is_2fa_enabled = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
+    is_2fa_enabled = db.Column(db.Boolean, default=False)
     profile_pic = db.Column(db.String(200), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
@@ -27,9 +27,6 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
 
 class OTP(db.Model):
     __tablename__ = 'otp'
@@ -60,9 +57,6 @@ class OTP(db.Model):
     def increment_attempts(self):
         self.attempts += 1
         db.session.commit()
-    
-    def __repr__(self):
-        return f'<OTP for {self.email}>'
 
 class Project(db.Model):
     __tablename__ = 'project'
@@ -76,9 +70,6 @@ class Project(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     scan_results = db.relationship('ScanResult', backref='project', lazy=True, cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<Project {self.project_name}>'
 
 class ScanResult(db.Model):
     __tablename__ = 'scan_result'
@@ -91,9 +82,6 @@ class ScanResult(db.Model):
     ai_analysis = db.Column(db.Text, nullable=True)
     ai_status = db.Column(db.String(20), default='none')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<ScanResult for Project {self.project_id}>'
 
 @login_manager.user_loader
 def load_user(user_id):

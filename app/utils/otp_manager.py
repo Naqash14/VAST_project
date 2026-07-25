@@ -1,31 +1,31 @@
-from app.models import OTP, User, db
-from datetime import datetime, timedelta
-import secrets
+from app.models import OTP, db
+from datetime import datetime
+import random
 import logging
 
 logger = logging.getLogger(__name__)
 
 class OTPManager:
-    """OTP management with Railway compatibility"""
+    """Handle OTP operations"""
     
     @staticmethod
-    def create_otp(email, user_id=None):
-        """Create new OTP and log it"""
+    def create_otp(email):
+        """Create new OTP for email"""
         try:
             # Delete old unused OTPs
             OTP.query.filter_by(email=email, is_used=False).delete()
             db.session.commit()
             
             # Create new OTP
-            otp = OTP(email=email, user_id=user_id)
+            otp = OTP(email=email)
             db.session.add(otp)
             db.session.commit()
             
-            logger.info(f"✅ OTP created for {email}: {otp.otp_code}")
+            logger.info(f"OTP created for {email}: {otp.otp_code}")
             return otp.otp_code
             
         except Exception as e:
-            logger.error(f"❌ OTP creation failed: {e}")
+            logger.error(f"OTP creation failed: {e}")
             db.session.rollback()
             return None
     
@@ -40,7 +40,6 @@ class OTPManager:
             ).first()
             
             if not otp:
-                logger.warning(f"Invalid OTP attempt for {email}")
                 return False, "Invalid OTP code"
             
             if otp.attempts >= 3:
@@ -52,34 +51,8 @@ class OTPManager:
             otp.is_used = True
             db.session.commit()
             
-            logger.info(f"✅ OTP verified for {email}")
             return True, "OTP verified successfully"
             
         except Exception as e:
             logger.error(f"OTP verification error: {e}")
             return False, "Verification failed"
-    
-    @staticmethod
-    def increment_attempts(email, otp_code):
-        """Track failed attempts"""
-        try:
-            otp = OTP.query.filter_by(
-                email=email,
-                otp_code=otp_code,
-                is_used=False
-            ).first()
-            
-            if otp:
-                otp.attempts += 1
-                db.session.commit()
-                
-                if otp.attempts >= 3:
-                    otp.is_used = True
-                    db.session.commit()
-                    return True, "OTP locked - too many attempts"
-            
-            return False, "Attempt recorded"
-            
-        except Exception as e:
-            logger.error(f"Attempt increment error: {e}")
-            return False, "Error"

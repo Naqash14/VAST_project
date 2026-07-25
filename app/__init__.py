@@ -29,7 +29,6 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
     
-    # Register JSON filter for templates
     @app.template_filter('json_loads')
     def json_loads_filter(value):
         try:
@@ -37,40 +36,46 @@ def create_app():
         except:
             return None
     
-    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
     
-    # Set login view - THIS IS CRITICAL
     login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
     
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
-    # Create tables
     with app.app_context():
         try:
             from app import models
             db.create_all()
             print("✅ Database tables created/verified")
+            
+            # Create admin user if not exists
+            from app.models import User
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                admin = User(
+                    username='admin',
+                    email='admin@vast.com',
+                    is_verified=True,
+                    is_admin=True
+                )
+                admin.set_password('Admin@123')
+                db.session.add(admin)
+                db.session.commit()
+                print("✅ Admin user created: admin / Admin@123")
+            else:
+                print("✅ Admin user already exists")
+                
         except Exception as e:
             print(f"⚠️ Database error: {e}")
     
-    # Register blueprints - ORDER MATTERS
     from app.routes import auth, dashboard, projects, admin
-    
-    app.register_blueprint(auth.bp)      # auth.login must be registered FIRST
+    app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(projects.bp)
     app.register_blueprint(admin.bp)
-    
-    print("✅ All blueprints registered")
-    print(f"📋 Registered endpoints:")
-    for rule in app.url_map.iter_rules():
-        if 'auth' in rule.endpoint:
-            print(f"   - {rule.endpoint} -> {rule.rule}")
     
     return app
