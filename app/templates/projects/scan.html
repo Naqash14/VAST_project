@@ -6,137 +6,62 @@
 
 {% block extra_css %}
 <style>
-    .analysis-buttons {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 25px;
-        flex-wrap: wrap;
-    }
-    .btn-analysis {
-        flex: 1;
-        min-width: 120px;
-        padding: 18px 15px;
-        border-radius: 12px;
-        text-align: center;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: block;
-        border: none;
-        color: white;
-        font-size: 14px;
-    }
-    .btn-analysis i { font-size: 28px; margin-bottom: 8px; display: block; }
-    .btn-analysis:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); text-decoration: none; color: white; }
+    .analysis-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .btn-analysis { flex: 1; min-width: 100px; padding: 12px; border-radius: 10px; text-align: center; cursor: pointer; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: block; border: none; color: white; font-size: 13px; }
+    .btn-analysis i { font-size: 22px; margin-bottom: 4px; display: block; }
+    .btn-analysis:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.15); text-decoration: none; color: white; }
     .btn-static { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
     .btn-symbolic { background: linear-gradient(135deg, #f8961e, #e85d04); }
     .btn-fuzz { background: linear-gradient(135deg, #10b981, #059669); }
     .btn-hybrid { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .btn-analysis small { display: block; font-size: 9px; opacity: 0.8; font-weight: 400; }
     
-    .finding-card {
-        border-left: 4px solid;
-        margin-bottom: 12px;
-        background: #f8f9fa;
-        padding: 15px 18px;
-        border-radius: 8px;
-    }
+    .finding-card { border-left: 3px solid; margin-bottom: 8px; background: #fafafa; padding: 10px 14px; border-radius: 6px; }
     .finding-card.critical { border-left-color: #dc3545; background: #fff5f7; }
     .finding-card.high { border-left-color: #fd7e14; background: #fff8f0; }
     .finding-card.medium { border-left-color: #ffc107; background: #fffcf0; }
     .finding-card.low { border-left-color: #6c757d; background: #f8f9fa; }
     .finding-card.info { border-left-color: #17a2b8; background: #f0f8ff; }
     
-    .severity-badge {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    .severity-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
     .severity-critical { background: #dc3545; color: white; }
     .severity-high { background: #fd7e14; color: white; }
     .severity-medium { background: #ffc107; color: #212529; }
     .severity-low { background: #6c757d; color: white; }
     .severity-info { background: #17a2b8; color: white; }
     
-    .stats-card {
-        text-align: center;
-        padding: 15px;
-        border-radius: 10px;
-        color: white;
-        margin-bottom: 10px;
-    }
+    .stats-card { text-align: center; padding: 10px; border-radius: 8px; color: white; }
     .stats-card.critical { background: #dc3545; }
     .stats-card.high { background: #fd7e14; }
     .stats-card.medium { background: #ffc107; color: #212529; }
     .stats-card.low { background: #6c757d; }
     .stats-card.info { background: #17a2b8; }
-    .stats-number { font-size: 28px; font-weight: 800; }
-    .stats-label { font-size: 12px; opacity: 0.9; }
+    .stats-number { font-size: 22px; font-weight: 800; }
+    .stats-label { font-size: 10px; opacity: 0.9; }
     
-    .code-snippet {
-        font-family: 'Courier New', monospace;
-        background: #1e1e1e;
-        color: #d4d4d4;
-        padding: 12px 15px;
-        border-radius: 6px;
-        font-size: 13px;
-        overflow-x: auto;
-        margin-top: 10px;
-    }
-    .code-snippet pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+    .code-snippet { font-family: 'Courier New', monospace; background: #1e1e1e; color: #d4d4d4; padding: 8px 12px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin-top: 6px; }
+    .code-snippet pre { margin: 0; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
     
-    .ai-section {
-        background: #f0f7ff;
-        border: 1px solid #cce5ff;
-        border-radius: 12px;
-        padding: 20px 25px;
-        margin-top: 25px;
-    }
-    .ai-section h6 {
-        color: #004085;
-        margin-bottom: 15px;
-        font-size: 16px;
-        font-weight: 700;
-    }
-    .ai-finding {
-        background: white;
-        padding: 18px 20px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        border-left: 4px solid #4361ee;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .ai-finding .cvss { font-weight: 700; color: #4361ee; font-size: 15px; }
+    .ai-section { background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 10px; padding: 16px 20px; margin-top: 16px; }
+    .ai-section h6 { color: #004085; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
+    .ai-finding { background: white; padding: 14px 16px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #4361ee; }
+    .ai-finding .cvss { font-weight: 700; color: #4361ee; font-size: 13px; }
     .ai-finding .priority-critical { color: #dc3545; font-weight: 700; }
     .ai-finding .priority-high { color: #fd7e14; font-weight: 700; }
     .ai-finding .priority-medium { color: #ffc107; font-weight: 700; }
     .ai-finding .priority-low { color: #6c757d; font-weight: 700; }
-    .ai-finding .remediation-bad { color: #dc3545; font-weight: 600; }
-    .ai-finding .remediation-fix { color: #28a745; font-weight: 600; }
-    .ai-finding .remediation-always { color: #4361ee; font-weight: 600; }
-    .ai-finding .exploitability { color: #6c757d; font-style: italic; margin-top: 8px; }
-    .ai-finding .full-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+    .ai-finding .remediation { margin-top: 6px; }
+    .ai-finding .exploitability { color: #6c757d; font-style: italic; margin-top: 6px; font-size: 13px; }
+    .ai-finding .full-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
+    .ai-finding .badge-bad { background: #dc3545; color: white; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+    .ai-finding .badge-fix { background: #28a745; color: white; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+    .ai-finding .badge-always { background: #4361ee; color: white; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+    .ai-finding .code-inline { background: #f8f9fa; padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 12px; }
     
-    .ai-summary-box {
-        background: #e8f4fd;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-    .ai-summary-box .stat-item { font-size: 14px; }
+    .ai-summary-box { background: #e8f4fd; padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+    .ai-summary-box .stat-item { font-size: 13px; }
     .ai-summary-box .stat-item strong { color: #004085; }
-    .ai-summary-box .priority-text { width: 100%; margin-top: 5px; font-weight: 500; }
-    
-    .badge-bad { background: #dc3545; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .badge-fix { background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .badge-always { background: #4361ee; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .ai-summary-box .priority-text { margin-top: 2px; font-weight: 500; font-size: 13px; width: 100%; }
 </style>
 {% endblock %}
 
@@ -145,14 +70,14 @@
     <div class="row">
         <div class="col-12">
             <!-- Project Info -->
-            <div class="card shadow mb-4">
-                <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body d-flex justify-content-between align-items-center flex-wrap py-2">
                     <div>
-                        <h4 class="mb-1">{{ project.project_name }}</h4>
-                        <p class="text-muted mb-0"><i class="far fa-calendar me-1"></i> Created: {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <h5 class="mb-0">{{ project.project_name }}</h5>
+                        <small class="text-muted"><i class="far fa-calendar me-1"></i> {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                     </div>
                     <div>
-                        <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary btn-sm me-2"><i class="fas fa-plus"></i> New</a>
+                        <a href="{{ url_for('projects.create') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i> New</a>
                         <a href="{{ url_for('projects.existing') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-list"></i> All</a>
                     </div>
                 </div>
@@ -163,61 +88,61 @@
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='semgrep') }}" class="btn-analysis btn-static">
                     <i class="fas fa-search"></i>
                     <span>Static</span>
-                    <small style="display:block;font-size:10px;opacity:0.8;">Semgrep</small>
+                    <small>Semgrep</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='symbolic') }}" class="btn-analysis btn-symbolic">
                     <i class="fas fa-brain"></i>
                     <span>Symbolic</span>
-                    <small style="display:block;font-size:10px;opacity:0.8;">KLEE/Angr</small>
+                    <small>KLEE/Angr</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='fuzz') }}" class="btn-analysis btn-fuzz">
                     <i class="fas fa-random"></i>
                     <span>Fuzz</span>
-                    <small style="display:block;font-size:10px;opacity:0.8;">libFuzzer</small>
+                    <small>libFuzzer</small>
                 </a>
                 <a href="{{ url_for('projects.perform_scan', project_id=project.id, tool='hybrid') }}" class="btn-analysis btn-hybrid">
                     <i class="fas fa-sync-alt"></i>
                     <span>Hybrid</span>
-                    <small style="display:block;font-size:10px;opacity:0.8;">All Combined</small>
+                    <small>All Combined</small>
                 </a>
             </div>
             
             <!-- Scan Results -->
             {% if scan_results %}
                 {% for result in scan_results %}
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap py-2">
                         <div>
-                            <h5 class="mb-0">
-                                <i class="fas fa-{{ 'search' if 'semgrep' in result.tool else 'brain' if 'symbolic' in result.tool else 'random' if 'fuzz' in result.tool else 'sync-alt' }} me-2"></i>
+                            <h6 class="mb-0">
+                                <i class="fas fa-{{ 'search' if 'semgrep' in result.tool else 'brain' if 'symbolic' in result.tool else 'random' if 'fuzz' in result.tool else 'sync-alt' }} me-1"></i>
                                 {{ result.tool|upper }}
-                            </h5>
+                            </h6>
                             <small class="text-muted">{{ result.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
                         </div>
                         <div>
-                            <a href="{{ url_for('projects.download_report', scan_id=result.id) }}" class="btn btn-success btn-sm"><i class="fas fa-download"></i> Report</a>
+                            <a href="{{ url_for('projects.download_report', scan_id=result.id) }}" class="btn btn-success btn-sm py-0 px-2"><i class="fas fa-download"></i></a>
                             <form method="POST" action="{{ url_for('projects.delete_scan', scan_id=result.id) }}" style="display:inline;" onsubmit="return confirm('Delete this scan?');">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                <button type="submit" class="btn btn-danger btn-sm py-0 px-2"><i class="fas fa-trash"></i></button>
                             </form>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         {% if result.findings.total_findings > 0 %}
                             <!-- Statistics -->
-                            <div class="row mb-4">
+                            <div class="row mb-2">
                                 {% for sev in ['critical', 'high', 'medium', 'low', 'info'] %}
                                     {% set count = result.findings.by_severity.get(sev, 0) %}
                                     {% if count > 0 %}
-                                    <div class="col-md-2 col-6 mb-2">
-                                        <div class="stats-card {{ sev }}">
+                                    <div class="col-md-2 col-4 mb-1">
+                                        <div class="stats-card {{ sev }} py-1">
                                             <div class="stats-number">{{ count }}</div>
                                             <div class="stats-label">{{ sev|upper }}</div>
                                         </div>
                                     </div>
                                     {% endif %}
                                 {% endfor %}
-                                <div class="col-md-2 col-6 mb-2">
-                                    <div class="stats-card" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+                                <div class="col-md-2 col-4 mb-1">
+                                    <div class="stats-card py-1" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
                                         <div class="stats-number">{{ result.findings.total_findings }}</div>
                                         <div class="stats-label">TOTAL</div>
                                     </div>
@@ -225,15 +150,15 @@
                             </div>
                             
                             <!-- Findings -->
-                            <h6 class="mb-3">Detailed Findings:</h6>
+                            <h6 class="mb-2" style="font-size:13px;">Findings:</h6>
                             {% for finding in result.findings.details %}
                             <div class="finding-card {{ finding.severity }}">
                                 <div>
                                     <span class="severity-badge severity-{{ finding.severity }}">{{ finding.severity|upper }}</span>
-                                    <strong>{{ finding.message }}</strong>
+                                    <strong style="font-size:13px;">{{ finding.message }}</strong>
                                     <small class="text-muted ms-2">Line {{ finding.line }}</small>
                                     {% if finding.tool %}
-                                    <span class="badge bg-secondary ms-2">Tool: {{ finding.tool }}</span>
+                                    <span class="badge bg-secondary ms-1" style="font-size:9px;">{{ finding.tool }}</span>
                                     {% endif %}
                                 </div>
                                 {% if finding.code_snippet %}
@@ -247,8 +172,7 @@
                             {% set ai_data = result.ai_analysis|json_loads %}
                             {% if ai_data and ai_data.findings %}
                             <div class="ai-section">
-                                <h6><i class="fas fa-robot me-2"></i>AI-Powered Vulnerability Analysis</h6>
-                                <div style="font-size:13px;color:#6c757d;margin-bottom:15px;">Expert recommendations generated by AI security assistant</div>
+                                <h6><i class="fas fa-robot me-1"></i>AI Analysis</h6>
                                 
                                 <div class="ai-summary-box">
                                     <div class="stat-item"><strong>Critical:</strong> <span class="text-danger">{{ ai_data.summary.critical_count }}</span></div>
@@ -261,13 +185,12 @@
                                 {% for ai_finding in ai_data.findings %}
                                 <div class="ai-finding">
                                     <div class="d-flex justify-content-between align-items-center flex-wrap">
-                                        <strong>Finding #{{ ai_finding.id + 1 }}</strong>
-                                        <span class="cvss">CVSS Score: {{ ai_finding.cvss_score }} | Priority: <span class="priority-{{ ai_finding.priority|lower }}">{{ ai_finding.priority }}</span></span>
+                                        <strong style="font-size:13px;">Finding #{{ ai_finding.id + 1 }}</strong>
+                                        <span class="cvss">CVSS: {{ ai_finding.cvss_score }} | Priority: <span class="priority-{{ ai_finding.priority|lower }}">{{ ai_finding.priority }}</span></span>
                                     </div>
                                     
-                                    <div class="remediation full-text" style="margin-top:12px;">
-                                        <strong>Remediation:</strong><br>
-                                        
+                                    <div class="remediation full-text" style="margin-top:8px; font-size:13px;">
+                                        <strong>Fix:</strong><br>
                                         {% if 'BAD:' in ai_finding.remediation %}
                                             {% set parts = ai_finding.remediation.split('FIX:') %}
                                             {% set bad_part = parts[0].replace('BAD:', '').strip() if parts|length > 0 else '' %}
@@ -276,10 +199,10 @@
                                             {% set always_part = remaining[1].strip() if remaining|length > 1 else '' %}
                                             
                                             {% if bad_part %}
-                                            <div><span class="badge-bad">BAD</span> <code style="color:#dc3545;background:#f8f9fa;padding:2px 8px;border-radius:4px;">{{ bad_part }}</code></div>
+                                            <div><span class="badge-bad">BAD</span> <code class="code-inline" style="color:#dc3545;">{{ bad_part }}</code></div>
                                             {% endif %}
                                             {% if fix_part %}
-                                            <div><span class="badge-fix">FIX</span> <code style="color:#28a745;background:#f8f9fa;padding:2px 8px;border-radius:4px;">{{ fix_part }}</code></div>
+                                            <div><span class="badge-fix">FIX</span> <code class="code-inline" style="color:#28a745;">{{ fix_part }}</code></div>
                                             {% endif %}
                                             {% if always_part %}
                                             <div><span class="badge-always">ALWAYS</span> {{ always_part }}</div>
@@ -289,9 +212,8 @@
                                         {% endif %}
                                     </div>
                                     
-                                    <div class="exploitability full-text">
-                                        <strong>Exploitability:</strong><br>
-                                        {{ ai_finding.exploitability }}
+                                    <div class="exploitability" style="font-size:13px; color:#6c757d; margin-top:4px;">
+                                        <strong>Impact:</strong> {{ ai_finding.exploitability }}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -300,21 +222,20 @@
                             {% endif %}
                             
                         {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                                <h4>No Issues Found</h4>
-                                <p class="text-muted">No vulnerabilities detected.</p>
+                            <div class="text-center py-3">
+                                <i class="fas fa-check-circle text-success fa-2x mb-1"></i>
+                                <h6 class="text-success mb-0">No Issues Found</h6>
                             </div>
                         {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="card shadow">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-search fa-4x text-muted mb-3"></i>
-                        <h4>No Scans Yet</h4>
-                        <p class="text-muted">Run an analysis to see results</p>
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-search fa-3x text-muted mb-2"></i>
+                        <h6>No Scans Yet</h6>
+                        <p class="text-muted small mb-0">Run an analysis to see results</p>
                     </div>
                 </div>
             {% endif %}
