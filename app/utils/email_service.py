@@ -1,23 +1,38 @@
-from flask_mail import Message
-from flask import current_app
-from app import mail
+"""
+Email Service - Uses Brevo REST API
+"""
+import os
 import logging
-import threading
+import requests
+import json
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-def send_async_email(app, msg):
-    """Send email in background thread"""
-    with app.app_context():
-        try:
-            mail.send(msg)
-            logger.info("✅ Email sent successfully via SMTP")
-        except Exception as e:
-            logger.error(f"❌ SMTP email failed: {e}")
-
 def send_otp_email(email, otp_code):
-    """Send OTP email using Brevo SMTP"""
+    """
+    Send OTP email using Brevo REST API
+    
+    Args:
+        email (str): Recipient email address
+        otp_code (str): One-Time Password to send
+        
+    Returns:
+        bool: True if sent successfully, False otherwise
+    """
     try:
+        api_key = os.environ.get('BREVO_API_KEY')
+        sender_email = os.environ.get('MAIL_DEFAULT_SENDER', 'vast.scanner@gmail.com')
+        sender_name = os.environ.get('MAIL_SENDER_NAME', 'VAST Scanner')
+        
+        if not api_key:
+            logger.error("❌ BREVO_API_KEY not set in environment variables")
+            return False
+        
+        # Brevo API URL
+        url = "https://api.brevo.com/v3/smtp/email"
+        
+        # Email content
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -75,25 +90,49 @@ def send_otp_email(email, otp_code):
         </html>
         """
         
-        msg = Message(
-            subject='VAST Scanner - Email Verification Code',
-            recipients=[email],
-            html=html_content
-        )
+        # Prepare payload for Brevo API
+        payload = {
+            "sender": {
+                "name": sender_name,
+                "email": sender_email
+            },
+            "to": [
+                {
+                    "email": email,
+                    "name": "User"
+                }
+            ],
+            "subject": "VAST Scanner - Email Verification Code",
+            "htmlContent": html_content,
+            "headers": {
+                "X-Mailin-custom": "VAST Scanner OTP",
+                "X-Mailin-tag": "otp-verification"
+            }
+        }
         
-        app = current_app._get_current_object()
-        thread = threading.Thread(target=send_async_email, args=(app, msg))
-        thread.daemon = True
-        thread.start()
+        # Headers
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        }
         
-        logger.info(f"📧 OTP email queued for {email}")
-        print(f"\n📧 OTP email queued for {email}: {otp_code}")
-        return True
+        # Send request
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
         
+        if response.status_code in [200, 201, 202]:
+            logger.info(f"✅ OTP email sent successfully via Brevo API to {email}")
+            print(f"\n✅ OTP email sent via Brevo to {email}")
+            return True
+        else:
+            logger.error(f"❌ Brevo API failed: {response.status_code} - {response.text}")
+            return False
+            
+    except requests.exceptions.Timeout:
+        logger.error(f"❌ Brevo API timeout for {email}")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Brevo API request error: {str(e)}")
+        return False
     except Exception as e:
         logger.error(f"❌ Email send failed: {str(e)}")
-        print(f"\n{'='*50}")
-        print(f"📧 OTP for {email}: {otp_code}")
-        print(f"(Email failed - use this code to verify)")
-        print(f"{'='*50}\n")
-        return True
+        return False
