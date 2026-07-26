@@ -38,19 +38,27 @@ def detect_language(code_content):
 def run_ai_analysis(scan_result, findings, language, context=None):
     try:
         ai = AIPrioritizer()
+        
         if ai.available:
             print(f"🤖 Running AI analysis on {len(findings)} findings...")
             ai_result = ai.analyze_findings(findings, language, context)
+            
             scan_result.ai_analysis = json.dumps(ai_result)
             scan_result.ai_status = 'complete'
             db.session.commit()
+            
             print(f"✅ AI Analysis complete for scan {scan_result.id}")
             return True
         else:
             scan_result.ai_status = 'failed'
-            scan_result.ai_analysis = json.dumps({"error": "AI unavailable"})
+            scan_result.ai_analysis = json.dumps({
+                "error": "AI service unavailable",
+                "message": "Groq API not configured"
+            })
             db.session.commit()
+            print("⚠️ AI unavailable")
             return False
+            
     except Exception as e:
         print(f"❌ AI Analysis failed: {e}")
         scan_result.ai_status = 'failed'
@@ -304,54 +312,41 @@ def perform_scan(project_id, tool):
     
     elif tool == 'hybrid':
         try:
-            # Run all three analyses
             all_details = []
-            severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
             total_count = 0
+            severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
             
-            # 1. Run Static Analysis
-            print("🔍 Running Static Analysis for Hybrid...")
-            scanner = UniversalScanner()
-            static_results = scanner.scan_code(project.code_content, project.filename)
+            # Run ALL THREE analyses and combine
+            tools_to_run = [
+                ('semgrep', UniversalScanner(), 'scan_code', 'Static'),
+                ('symbolic', SymbolicAnalyzer(), 'analyze', 'Symbolic'),
+                ('fuzz', FuzzTester(), 'fuzz', 'Fuzz')
+            ]
             
-            if 'error' not in static_results:
-                for finding in static_results.get('details', []):
-                    finding['tool'] = 'Semgrep'
-                    all_details.append(finding)
-                    severity = finding.get('severity', 'info')
-                    if severity in severity_counts:
-                        severity_counts[severity] += 1
-                    total_count += 1
+            for tool_name, tool_instance, method_name, display_name in tools_to_run:
+                try:
+                    if tool_name == 'semgrep':
+                        result = tool_instance.scan_code(project.code_content, project.filename)
+                    elif tool_name == 'symbolic':
+                        result = tool_instance.analyze(project.code_content, language, project.filename)
+                    elif tool_name == 'fuzz':
+                        result = tool_instance.fuzz(project.code_content, language, project.filename)
+                    else:
+                        continue
+                    
+                    if 'error' not in result:
+                        for finding in result.get('findings', []):
+                            finding['tool'] = display_name
+                            all_details.append(finding)
+                            
+                            severity = finding.get('severity', 'info')
+                            if severity in severity_counts:
+                                severity_counts[severity] += 1
+                            total_count += 1
+                            
+                except Exception as e:
+                    print(f"⚠️ {display_name} analysis failed: {e}")
             
-            # 2. Run Symbolic Analysis
-            print("🧠 Running Symbolic Analysis for Hybrid...")
-            sym_analyzer = SymbolicAnalyzer()
-            sym_results = sym_analyzer.analyze(project.code_content, language, project.filename)
-            
-            if 'error' not in sym_results:
-                for finding in sym_results.get('findings', []):
-                    finding['tool'] = 'Symbolic'
-                    all_details.append(finding)
-                    severity = finding.get('severity', 'info')
-                    if severity in severity_counts:
-                        severity_counts[severity] += 1
-                    total_count += 1
-            
-            # 3. Run Fuzz Testing
-            print("🎲 Running Fuzz Testing for Hybrid...")
-            fuzzer = FuzzTester()
-            fuzz_results = fuzzer.fuzz(project.code_content, language, project.filename)
-            
-            if 'error' not in fuzz_results:
-                for finding in fuzz_results.get('findings', []):
-                    finding['tool'] = 'Fuzz'
-                    all_details.append(finding)
-                    severity = finding.get('severity', 'info')
-                    if severity in severity_counts:
-                        severity_counts[severity] += 1
-                    total_count += 1
-            
-            # Save combined results
             formatted_results = {
                 "total_findings": total_count,
                 "by_severity": severity_counts,
@@ -369,7 +364,7 @@ def perform_scan(project_id, tool):
             
             run_ai_analysis(scan_result, all_details, language, context=f"Project: {project.project_name} - Hybrid Analysis")
             
-            flash(f'Hybrid Analysis: Found {total_count} issues', 'success')
+            flash(f'Hybrid Analysis: Found {total_count} issues from all three techniques', 'success')
             
         except Exception as e:
             flash(f'Hybrid Analysis error: {str(e)}', 'error')
@@ -433,7 +428,7 @@ def delete_scan(scan_id):
         return redirect(url_for('dashboard.index'))
     db.session.delete(scan_result)
     db.session.commit()
-    flash('Scan result deleted successfully', 'success')
+    flash('Scan result deleted', 'success')
     return redirect(url_for('projects.scan', project_id=project.id))
 
 @bp.route('/delete-project/<int:project_id>', methods=['POST'])
@@ -448,3 +443,45 @@ def delete_project(project_id):
     db.session.commit()
     flash('Project deleted', 'success')
     return redirect(url_for('projects.existing'))
+
+# Add this updated download_report function
+# (You'll need to replace the existing one)
+
+@bp.route('/download-report/<int:scan_id>')
+@login_required
+def download_report(scan_id):
+    try:
+        scan_result = ScanResult.query.get_or_404(scan_id)
+        project = Project.query.get_or_404(scan_result.project_id)
+        if project.user_id != current_user.id:
+            flash('Unauthorized access', 'error')
+            return redirect(url_for('dashboard.index'))
+        
+        findings = json.loads(scan_result.findings) if scan_result.findings else {}
+        safe_name = ''.join(c for c in project.project_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        report_filename = f"VAST_Report_{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        reports_dir = os.path.join(os.path.dirname(__file__), '..', 'reports')
+        os.makedirs(reports_dir, exist_ok=True)
+        full_path = os.path.join(reports_dir, report_filename)
+        
+        # Parse AI analysis
+        ai_analysis = None
+        if scan_result.ai_analysis:
+            try:
+                ai_analysis = json.loads(scan_result.ai_analysis)
+            except:
+                ai_analysis = scan_result.ai_analysis
+        
+        pdf_generator = PDFReportGenerator(full_path)
+        pdf_generator.generate_vulnerability_report(
+            project_data={'project_name': project.project_name},
+            scan_results=findings.get('by_severity', {}),
+            user_info={'username': current_user.username, 'email': current_user.email},
+            findings_details=findings.get('details', []),
+            ai_analysis=ai_analysis
+        )
+        
+        return send_file(full_path, as_attachment=True, download_name=report_filename, mimetype='application/pdf')
+    except Exception as e:
+        flash(f'Failed to generate report: {str(e)}', 'error')
+        return redirect(url_for('projects.scan', project_id=project.id))
