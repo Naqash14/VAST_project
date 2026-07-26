@@ -85,7 +85,7 @@ class PDFReportGenerator:
             story.append(Paragraph("<b>Detailed Findings</b>", self.styles["Heading2"]))
             story.append(Spacer(1, 10))
             
-            for i, finding in enumerate(findings_details[:20], 1):
+            for i, finding in enumerate(findings_details, 1):
                 severity = finding.get('severity', 'info')
                 severity_color = colors.grey
                 if severity == 'critical':
@@ -113,13 +113,21 @@ class PDFReportGenerator:
                 
                 story.append(Spacer(1, 10))
         
-        # AI Analysis Summary
+        # AI Analysis Summary - ALL FINDINGS (NO LIMIT)
         if ai_analysis and ai_analysis.get('findings'):
             story.append(Spacer(1, 20))
             story.append(Paragraph("<b>AI-Powered Analysis</b>", self.styles["Heading2"]))
             story.append(Spacer(1, 10))
             
-            for ai_finding in ai_analysis.get('findings', [])[:5]:
+            # Show summary stats
+            summary = ai_analysis.get('summary', {})
+            if summary:
+                story.append(Paragraph(f"<b>AI Summary:</b> {summary.get('critical_count', 0)} Critical, {summary.get('high_count', 0)} High, {summary.get('medium_count', 0)} Medium, {summary.get('low_count', 0)} Low", self.styles["Normal"]))
+                story.append(Paragraph(f"<b>Priority:</b> {summary.get('overall_priority', 'N/A')}", self.styles["Normal"]))
+                story.append(Spacer(1, 10))
+            
+            # ALL AI findings - no limit
+            for ai_finding in ai_analysis.get('findings', []):
                 story.append(Paragraph(f"<b>Finding {ai_finding.get('id', 0) + 1}</b>", self.styles["Normal"]))
                 story.append(Paragraph(f"<b>CVSS:</b> {ai_finding.get('cvss_score', 'N/A')} | <b>Priority:</b> {ai_finding.get('priority', 'N/A')}", self.styles["Normal"]))
                 story.append(Paragraph(f"<b>Remediation:</b> {ai_finding.get('remediation', 'N/A')}", self.styles["Normal"]))
