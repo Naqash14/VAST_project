@@ -313,49 +313,75 @@ def perform_scan(project_id, tool):
     
     elif tool == 'hybrid':
         try:
-            all_findings = {
-                "total": 0,
-                "by_severity": {},
-                "details": []
-            }
-            
-            tools_to_run = ['semgrep', 'symbolic', 'fuzz']
-            results_list = []
-            
-            for t in tools_to_run:
-                if t == 'semgrep':
-                    scanner = UniversalScanner()
-                    result = scanner.scan_code(project.code_content, project.filename)
-                    results_list.append(("Static", result))
-                elif t == 'symbolic':
-                    sym = SymbolicAnalyzer()
-                    result = sym.analyze(project.code_content, language, project.filename)
-                    results_list.append(("Symbolic", result))
-                elif t == 'fuzz':
-                    fuzzer = FuzzTester()
-                    result = fuzzer.fuzz(project.code_content, language, project.filename)
-                    results_list.append(("Fuzz", result))
+            print("🚀 Running HYBRID Analysis - ALL techniques combined")
             
             all_details = []
             total_count = 0
             severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
             
-            for tool_name, result in results_list:
-                if 'error' not in result:
-                    for finding in result.get('findings', []):
-                        finding['tool'] = tool_name
-                        all_details.append(finding)
-                        
-                        severity = finding.get('severity', 'info')
-                        if severity in severity_counts:
-                            severity_counts[severity] += 1
-                        total_count += 1
+            # ===== 1. STATIC ANALYSIS =====
+            print("📊 Running Static Analysis (Semgrep)...")
+            scanner = UniversalScanner()
+            static_result = scanner.scan_code(project.code_content, project.filename)
             
+            if 'error' not in static_result:
+                for finding in static_result.get('details', []):
+                    finding['tool'] = 'Semgrep'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+                print(f"   Static: {len(static_result.get('details', []))} findings")
+            else:
+                print(f"   Static failed: {static_result.get('error')}")
+            
+            # ===== 2. SYMBOLIC ANALYSIS =====
+            print("🧠 Running Symbolic Analysis...")
+            sym_analyzer = SymbolicAnalyzer()
+            symbolic_result = sym_analyzer.analyze(project.code_content, language, project.filename)
+            
+            if 'error' not in symbolic_result:
+                for finding in symbolic_result.get('findings', []):
+                    finding['tool'] = 'Symbolic'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+                print(f"   Symbolic: {len(symbolic_result.get('findings', []))} findings")
+            else:
+                print(f"   Symbolic failed: {symbolic_result.get('error')}")
+            
+            # ===== 3. FUZZ TESTING =====
+            print("🎲 Running Fuzz Testing...")
+            fuzzer = FuzzTester()
+            fuzz_result = fuzzer.fuzz(project.code_content, language, project.filename)
+            
+            if 'error' not in fuzz_result:
+                for finding in fuzz_result.get('findings', []):
+                    finding['tool'] = 'Fuzz'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+                print(f"   Fuzz: {len(fuzz_result.get('findings', []))} findings")
+            else:
+                print(f"   Fuzz failed: {fuzz_result.get('error')}")
+            
+            # ===== COMBINE RESULTS =====
             formatted_results = {
                 "total_findings": total_count,
                 "by_severity": severity_counts,
                 "details": all_details
             }
+            
+            print(f"\n📊 HYBRID SUMMARY: {total_count} total findings")
+            print(f"   Critical: {severity_counts['critical']}")
+            print(f"   High: {severity_counts['high']}")
+            print(f"   Medium: {severity_counts['medium']}")
+            print(f"   Low: {severity_counts['low']}")
             
             scan_result = ScanResult(
                 project_id=project.id,
@@ -368,7 +394,7 @@ def perform_scan(project_id, tool):
             
             run_ai_analysis(scan_result, all_details, language, context=f"Project: {project.project_name} - Hybrid Analysis")
             
-            flash(f'Hybrid Analysis: Found {total_count} issues', 'success')
+            flash(f'Hybrid Analysis: Found {total_count} issues from Static, Symbolic, and Fuzz combined!', 'success')
             
         except Exception as e:
             flash(f'Hybrid Analysis error: {str(e)}', 'error')
@@ -392,7 +418,6 @@ def view(project_id):
     scan_results = ScanResult.query.filter_by(project_id=project.id).order_by(ScanResult.created_at.desc()).all()
     return render_template('projects/view.html', project=project, scan_results=scan_results, now=datetime.now())
 
-# ===== DOWNLOAD REPORT =====
 @bp.route('/download-report/<int:scan_id>')
 @login_required
 def download_report(scan_id):
@@ -410,7 +435,6 @@ def download_report(scan_id):
         os.makedirs(reports_dir, exist_ok=True)
         full_path = os.path.join(reports_dir, report_filename)
         
-        # Include AI analysis in report
         ai_analysis = None
         if scan_result.ai_status == 'complete' and scan_result.ai_analysis:
             try:
@@ -432,7 +456,6 @@ def download_report(scan_id):
         flash(f'Failed to generate report: {str(e)}', 'error')
         return redirect(url_for('projects.scan', project_id=project.id))
 
-# ===== DELETE SCAN =====
 @bp.route('/delete-scan/<int:scan_id>', methods=['POST'])
 @login_required
 def delete_scan(scan_id):
@@ -446,7 +469,6 @@ def delete_scan(scan_id):
     flash('Scan result deleted', 'success')
     return redirect(url_for('projects.scan', project_id=project.id))
 
-# ===== DELETE PROJECT =====
 @bp.route('/delete-project/<int:project_id>', methods=['POST'])
 @login_required
 def delete_project(project_id):
