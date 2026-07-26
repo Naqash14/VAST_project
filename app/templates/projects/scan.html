@@ -115,11 +115,38 @@
     .ai-finding .priority-high { color: #fd7e14; font-weight: 700; }
     .ai-finding .priority-medium { color: #ffc107; font-weight: 700; }
     .ai-finding .priority-low { color: #6c757d; font-weight: 700; }
-    .ai-finding .remediation-bad { color: #dc3545; font-weight: 600; }
-    .ai-finding .remediation-fix { color: #28a745; font-weight: 600; }
-    .ai-finding .remediation-always { color: #4361ee; font-weight: 600; }
-    .ai-finding .exploitability { color: #6c757d; font-style: italic; margin-top: 8px; }
-    .ai-finding .full-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+    
+    .ai-remediation {
+        margin: 8px 0;
+        line-height: 1.4;
+        font-size: 14px;
+    }
+    
+    .ai-remediation strong {
+        display: block;
+        margin-bottom: 2px;
+    }
+    
+    .ai-remediation-item {
+        display: block;
+        margin: 2px 0;
+        line-height: 1.3;
+    }
+    
+    .ai-exploitability {
+        margin: 8px 0;
+        line-height: 1.4;
+        font-size: 14px;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .ai-exploitability strong {
+        display: block;
+        color: #212529;
+        font-style: normal;
+        margin-bottom: 2px;
+    }
     
     .ai-summary-box {
         background: #e8f4fd;
@@ -267,9 +294,8 @@
                                         <span class="cvss">CVSS: {{ ai_finding.cvss_score }} | Priority: <span class="priority-{{ ai_finding.priority|lower }}">{{ ai_finding.priority }}</span></span>
                                     </div>
                                     
-                                    <div class="remediation full-text" style="margin-top:10px;">
-                                        <strong>Remediation:</strong><br>
-                                        
+                                    <div class="ai-remediation">
+                                        <strong>Remediation:</strong>
                                         {% if 'BAD:' in ai_finding.remediation %}
                                             {% set parts = ai_finding.remediation.split('FIX:') %}
                                             {% set bad_part = parts[0].replace('BAD:', '').strip() if parts|length > 0 else '' %}
@@ -278,20 +304,20 @@
                                             {% set always_part = remaining[1].strip() if remaining|length > 1 else '' %}
                                             
                                             {% if bad_part %}
-                                            <span class="badge-bad">BAD</span> <span class="code-bad">{{ bad_part }}</span><br>
+                                            <span class="ai-remediation-item"><span class="badge-bad">BAD</span> <span class="code-bad">{{ bad_part }}</span></span>
                                             {% endif %}
                                             {% if fix_part %}
-                                            <span class="badge-fix">FIX</span> <span class="code-fix">{{ fix_part }}</span><br>
+                                            <span class="ai-remediation-item"><span class="badge-fix">FIX</span> <span class="code-fix">{{ fix_part }}</span></span>
                                             {% endif %}
                                             {% if always_part %}
-                                            <span class="badge-always">ALWAYS</span> {{ always_part }}
+                                            <span class="ai-remediation-item"><span class="badge-always">ALWAYS</span> {{ always_part }}</span>
                                             {% endif %}
                                         {% else %}
-                                            {{ ai_finding.remediation }}
+                                            <span class="ai-remediation-item">{{ ai_finding.remediation }}</span>
                                         {% endif %}
                                     </div>
                                     
-                                    <div class="exploitability full-text" style="margin-top:8px;">
+                                    <div class="ai-exploitability">
                                         <strong>Exploitability:</strong> {{ ai_finding.exploitability }}
                                     </div>
                                 </div>
