@@ -36,39 +36,23 @@ def detect_language(code_content):
     return 'python'
 
 def run_ai_analysis(scan_result, findings, language, context=None):
-    """Run AI analysis and save to database"""
     try:
-        print("🤖 Starting AI analysis...")
         ai = AIPrioritizer()
-        
-        print(f"🤖 AI Available: {ai.available}")
-        print(f"🤖 AI Model: {ai.model}")
-        print(f"🤖 API Key: {ai.api_key[:10]}...")
-        
         if ai.available:
             print(f"🤖 Running AI analysis on {len(findings)} findings...")
             ai_result = ai.analyze_findings(findings, language, context)
-            
             scan_result.ai_analysis = json.dumps(ai_result)
             scan_result.ai_status = 'complete'
             db.session.commit()
-            
             print(f"✅ AI Analysis complete for scan {scan_result.id}")
             return True
         else:
-            print("⚠️ AI unavailable - Groq API key not set or invalid")
             scan_result.ai_status = 'failed'
-            scan_result.ai_analysis = json.dumps({
-                "error": "AI service unavailable",
-                "message": "GROQ_API_KEY not configured on server"
-            })
+            scan_result.ai_analysis = json.dumps({"error": "AI unavailable"})
             db.session.commit()
             return False
-            
     except Exception as e:
         print(f"❌ AI Analysis failed: {e}")
-        import traceback
-        traceback.print_exc()
         scan_result.ai_status = 'failed'
         scan_result.ai_analysis = json.dumps({"error": str(e)})
         db.session.commit()
@@ -320,46 +304,54 @@ def perform_scan(project_id, tool):
     
     elif tool == 'hybrid':
         try:
-            all_findings = {
-                "total": 0,
-                "by_severity": {},
-                "details": []
-            }
-            
             # Run all three analyses
-            tools_to_run = ['semgrep', 'symbolic', 'fuzz']
-            results_list = []
-            
-            for t in tools_to_run:
-                if t == 'semgrep':
-                    scanner = UniversalScanner()
-                    result = scanner.scan_code(project.code_content, project.filename)
-                    results_list.append(("Static", result))
-                elif t == 'symbolic':
-                    sym = SymbolicAnalyzer()
-                    result = sym.analyze(project.code_content, language, project.filename)
-                    results_list.append(("Symbolic", result))
-                elif t == 'fuzz':
-                    fuzzer = FuzzTester()
-                    result = fuzzer.fuzz(project.code_content, language, project.filename)
-                    results_list.append(("Fuzz", result))
-            
-            # Combine all results
             all_details = []
-            total_count = 0
             severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
+            total_count = 0
             
-            for tool_name, result in results_list:
-                if 'error' not in result:
-                    for finding in result.get('findings', []):
-                        finding['tool'] = tool_name
-                        all_details.append(finding)
-                        
-                        severity = finding.get('severity', 'info')
-                        if severity in severity_counts:
-                            severity_counts[severity] += 1
-                        total_count += 1
+            # 1. Run Static Analysis
+            print("🔍 Running Static Analysis for Hybrid...")
+            scanner = UniversalScanner()
+            static_results = scanner.scan_code(project.code_content, project.filename)
             
+            if 'error' not in static_results:
+                for finding in static_results.get('details', []):
+                    finding['tool'] = 'Semgrep'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+            
+            # 2. Run Symbolic Analysis
+            print("🧠 Running Symbolic Analysis for Hybrid...")
+            sym_analyzer = SymbolicAnalyzer()
+            sym_results = sym_analyzer.analyze(project.code_content, language, project.filename)
+            
+            if 'error' not in sym_results:
+                for finding in sym_results.get('findings', []):
+                    finding['tool'] = 'Symbolic'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+            
+            # 3. Run Fuzz Testing
+            print("🎲 Running Fuzz Testing for Hybrid...")
+            fuzzer = FuzzTester()
+            fuzz_results = fuzzer.fuzz(project.code_content, language, project.filename)
+            
+            if 'error' not in fuzz_results:
+                for finding in fuzz_results.get('findings', []):
+                    finding['tool'] = 'Fuzz'
+                    all_details.append(finding)
+                    severity = finding.get('severity', 'info')
+                    if severity in severity_counts:
+                        severity_counts[severity] += 1
+                    total_count += 1
+            
+            # Save combined results
             formatted_results = {
                 "total_findings": total_count,
                 "by_severity": severity_counts,
@@ -436,14 +428,11 @@ def download_report(scan_id):
 def delete_scan(scan_id):
     scan_result = ScanResult.query.get_or_404(scan_id)
     project = Project.query.get_or_404(scan_result.project_id)
-    
     if project.user_id != current_user.id:
         flash('Unauthorized action', 'error')
         return redirect(url_for('dashboard.index'))
-    
     db.session.delete(scan_result)
     db.session.commit()
-    
     flash('Scan result deleted successfully', 'success')
     return redirect(url_for('projects.scan', project_id=project.id))
 
@@ -454,10 +443,8 @@ def delete_project(project_id):
     if project.user_id != current_user.id:
         flash('Unauthorized action', 'error')
         return redirect(url_for('dashboard.index'))
-    
     ScanResult.query.filter_by(project_id=project.id).delete()
     db.session.delete(project)
     db.session.commit()
-    
     flash('Project deleted', 'success')
     return redirect(url_for('projects.existing'))
