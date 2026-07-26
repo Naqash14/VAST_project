@@ -10,7 +10,6 @@ import requests
 logger = logging.getLogger(__name__)
 
 def send_async_email(app, msg):
-    """Send email in background thread (legacy SMTP)"""
     with app.app_context():
         try:
             mail.send(msg)
@@ -19,25 +18,16 @@ def send_async_email(app, msg):
             logger.error(f"Email failed: {e}")
 
 def send_otp_email(email, otp_code):
-    """
-    Send OTP email using Resend email service
-    
-    Args:
-        email (str): Recipient email address
-        otp_code (str): One-Time Password to send
-        
-    Returns:
-        bool: True if sent successfully, False otherwise
-    """
+    """Send OTP email using Resend email service"""
     try:
         api_key = os.environ.get('RESEND_API_KEY')
-        sender_email = os.environ.get('SENDER_EMAIL', 'vast.scanner@gmail.com')
+        sender_email = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
         
         if not api_key:
-            logger.error("❌ RESEND_API_KEY not set in environment variables")
+            logger.error("❌ RESEND_API_KEY not set")
             return _send_otp_email_smtp(email, otp_code)
         
-        # Send email via Resend API
+        # Send via Resend API
         response = requests.post(
             "https://api.resend.com/emails",
             headers={
@@ -108,20 +98,20 @@ def send_otp_email(email, otp_code):
         )
         
         if response.status_code == 200:
-            logger.info(f"✅ OTP email sent successfully via Resend to {email}")
-            print(f"\n✅ OTP email sent via Resend to {email}")
+            logger.info(f"✅ OTP email sent via Resend to {email}")
+            print(f"\n✅ OTP sent to {email}")
             return True
         else:
-            logger.error(f"❌ Resend API failed with status {response.status_code}: {response.text}")
+            logger.error(f"❌ Resend failed ({response.status_code}): {response.text}")
             return _send_otp_email_smtp(email, otp_code)
             
     except Exception as e:
-        logger.error(f"❌ Resend email failed: {str(e)}")
+        logger.error(f"❌ Resend error: {e}")
         return _send_otp_email_smtp(email, otp_code)
 
 
 def _send_otp_email_smtp(email, otp_code):
-    """Fallback: Send OTP email using SMTP (legacy method)"""
+    """Fallback: Send OTP email using SMTP"""
     try:
         html_content = f"""
         <!DOCTYPE html>
@@ -159,14 +149,13 @@ def _send_otp_email_smtp(email, otp_code):
         thread.daemon = True
         thread.start()
         
-        logger.info(f"OTP email queued via SMTP for {email}")
+        logger.info(f"OTP queued via SMTP for {email}")
         print(f"\n📧 OTP queued for {email}: {otp_code}")
         return True
         
     except Exception as e:
-        logger.error(f"SMTP email error: {e}")
+        logger.error(f"SMTP error: {e}")
         print(f"\n{'='*50}")
         print(f"📧 OTP for {email}: {otp_code}")
-        print(f"(Email failed - use this code to verify)")
         print(f"{'='*50}\n")
         return True
