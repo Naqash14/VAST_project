@@ -36,6 +36,7 @@ def detect_language(code_content):
     return 'python'
 
 def run_ai_analysis(scan_result, findings, language, context=None):
+    """Run AI analysis and save to database"""
     try:
         ai = AIPrioritizer()
         
@@ -312,40 +313,43 @@ def perform_scan(project_id, tool):
     
     elif tool == 'hybrid':
         try:
+            all_findings = {
+                "total": 0,
+                "by_severity": {},
+                "details": []
+            }
+            
+            tools_to_run = ['semgrep', 'symbolic', 'fuzz']
+            results_list = []
+            
+            for t in tools_to_run:
+                if t == 'semgrep':
+                    scanner = UniversalScanner()
+                    result = scanner.scan_code(project.code_content, project.filename)
+                    results_list.append(("Static", result))
+                elif t == 'symbolic':
+                    sym = SymbolicAnalyzer()
+                    result = sym.analyze(project.code_content, language, project.filename)
+                    results_list.append(("Symbolic", result))
+                elif t == 'fuzz':
+                    fuzzer = FuzzTester()
+                    result = fuzzer.fuzz(project.code_content, language, project.filename)
+                    results_list.append(("Fuzz", result))
+            
             all_details = []
             total_count = 0
             severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
             
-            # Run ALL THREE analyses and combine
-            tools_to_run = [
-                ('semgrep', UniversalScanner(), 'scan_code', 'Static'),
-                ('symbolic', SymbolicAnalyzer(), 'analyze', 'Symbolic'),
-                ('fuzz', FuzzTester(), 'fuzz', 'Fuzz')
-            ]
-            
-            for tool_name, tool_instance, method_name, display_name in tools_to_run:
-                try:
-                    if tool_name == 'semgrep':
-                        result = tool_instance.scan_code(project.code_content, project.filename)
-                    elif tool_name == 'symbolic':
-                        result = tool_instance.analyze(project.code_content, language, project.filename)
-                    elif tool_name == 'fuzz':
-                        result = tool_instance.fuzz(project.code_content, language, project.filename)
-                    else:
-                        continue
-                    
-                    if 'error' not in result:
-                        for finding in result.get('findings', []):
-                            finding['tool'] = display_name
-                            all_details.append(finding)
-                            
-                            severity = finding.get('severity', 'info')
-                            if severity in severity_counts:
-                                severity_counts[severity] += 1
-                            total_count += 1
-                            
-                except Exception as e:
-                    print(f"⚠️ {display_name} analysis failed: {e}")
+            for tool_name, result in results_list:
+                if 'error' not in result:
+                    for finding in result.get('findings', []):
+                        finding['tool'] = tool_name
+                        all_details.append(finding)
+                        
+                        severity = finding.get('severity', 'info')
+                        if severity in severity_counts:
+                            severity_counts[severity] += 1
+                        total_count += 1
             
             formatted_results = {
                 "total_findings": total_count,
@@ -364,7 +368,7 @@ def perform_scan(project_id, tool):
             
             run_ai_analysis(scan_result, all_details, language, context=f"Project: {project.project_name} - Hybrid Analysis")
             
-            flash(f'Hybrid Analysis: Found {total_count} issues from all three techniques', 'success')
+            flash(f'Hybrid Analysis: Found {total_count} issues', 'success')
             
         except Exception as e:
             flash(f'Hybrid Analysis error: {str(e)}', 'error')
@@ -388,6 +392,7 @@ def view(project_id):
     scan_results = ScanResult.query.filter_by(project_id=project.id).order_by(ScanResult.created_at.desc()).all()
     return render_template('projects/view.html', project=project, scan_results=scan_results, now=datetime.now())
 
+# ===== DOWNLOAD REPORT =====
 @bp.route('/download-report/<int:scan_id>')
 @login_required
 def download_report(scan_id):
@@ -405,72 +410,13 @@ def download_report(scan_id):
         os.makedirs(reports_dir, exist_ok=True)
         full_path = os.path.join(reports_dir, report_filename)
         
-        pdf_generator = PDFReportGenerator(full_path)
-        pdf_generator.generate_vulnerability_report(
-            project_data={'project_name': project.project_name},
-            scan_results=findings.get('by_severity', {}),
-            user_info={'username': current_user.username, 'email': current_user.email},
-            findings_details=findings.get('details', [])
-        )
-        
-        return send_file(full_path, as_attachment=True, download_name=report_filename, mimetype='application/pdf')
-    except Exception as e:
-        flash(f'Failed to generate report: {str(e)}', 'error')
-        return redirect(url_for('projects.scan', project_id=project.id))
-
-@bp.route('/delete-scan/<int:scan_id>', methods=['POST'])
-@login_required
-def delete_scan(scan_id):
-    scan_result = ScanResult.query.get_or_404(scan_id)
-    project = Project.query.get_or_404(scan_result.project_id)
-    if project.user_id != current_user.id:
-        flash('Unauthorized action', 'error')
-        return redirect(url_for('dashboard.index'))
-    db.session.delete(scan_result)
-    db.session.commit()
-    flash('Scan result deleted', 'success')
-    return redirect(url_for('projects.scan', project_id=project.id))
-
-@bp.route('/delete-project/<int:project_id>', methods=['POST'])
-@login_required
-def delete_project(project_id):
-    project = Project.query.get_or_404(project_id)
-    if project.user_id != current_user.id:
-        flash('Unauthorized action', 'error')
-        return redirect(url_for('dashboard.index'))
-    ScanResult.query.filter_by(project_id=project.id).delete()
-    db.session.delete(project)
-    db.session.commit()
-    flash('Project deleted', 'success')
-    return redirect(url_for('projects.existing'))
-
-# Add this updated download_report function
-# (You'll need to replace the existing one)
-
-@bp.route('/download-report/<int:scan_id>')
-@login_required
-def download_report(scan_id):
-    try:
-        scan_result = ScanResult.query.get_or_404(scan_id)
-        project = Project.query.get_or_404(scan_result.project_id)
-        if project.user_id != current_user.id:
-            flash('Unauthorized access', 'error')
-            return redirect(url_for('dashboard.index'))
-        
-        findings = json.loads(scan_result.findings) if scan_result.findings else {}
-        safe_name = ''.join(c for c in project.project_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        report_filename = f"VAST_Report_{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        reports_dir = os.path.join(os.path.dirname(__file__), '..', 'reports')
-        os.makedirs(reports_dir, exist_ok=True)
-        full_path = os.path.join(reports_dir, report_filename)
-        
-        # Parse AI analysis
+        # Include AI analysis in report
         ai_analysis = None
-        if scan_result.ai_analysis:
+        if scan_result.ai_status == 'complete' and scan_result.ai_analysis:
             try:
                 ai_analysis = json.loads(scan_result.ai_analysis)
             except:
-                ai_analysis = scan_result.ai_analysis
+                pass
         
         pdf_generator = PDFReportGenerator(full_path)
         pdf_generator.generate_vulnerability_report(
@@ -485,3 +431,31 @@ def download_report(scan_id):
     except Exception as e:
         flash(f'Failed to generate report: {str(e)}', 'error')
         return redirect(url_for('projects.scan', project_id=project.id))
+
+# ===== DELETE SCAN =====
+@bp.route('/delete-scan/<int:scan_id>', methods=['POST'])
+@login_required
+def delete_scan(scan_id):
+    scan_result = ScanResult.query.get_or_404(scan_id)
+    project = Project.query.get_or_404(scan_result.project_id)
+    if project.user_id != current_user.id:
+        flash('Unauthorized action', 'error')
+        return redirect(url_for('dashboard.index'))
+    db.session.delete(scan_result)
+    db.session.commit()
+    flash('Scan result deleted', 'success')
+    return redirect(url_for('projects.scan', project_id=project.id))
+
+# ===== DELETE PROJECT =====
+@bp.route('/delete-project/<int:project_id>', methods=['POST'])
+@login_required
+def delete_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    if project.user_id != current_user.id:
+        flash('Unauthorized action', 'error')
+        return redirect(url_for('dashboard.index'))
+    ScanResult.query.filter_by(project_id=project.id).delete()
+    db.session.delete(project)
+    db.session.commit()
+    flash('Project deleted', 'success')
+    return redirect(url_for('projects.existing'))
