@@ -8,9 +8,7 @@ import os
 import re
 import time
 import logging
-from dotenv import load_dotenv
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 
@@ -18,43 +16,35 @@ class AIPrioritizer:
     """AI-powered vulnerability analysis using Groq API."""
 
     def __init__(self, model=None):
-        self.model = model or os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
+        # Directly read from environment
         self.api_key = os.environ.get('GROQ_API_KEY')
+        self.model = model or os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
         self.timeout = int(os.environ.get('AI_TIMEOUT', 60))
         self.available = self._check_availability()
 
         if self.available:
             print(f"🤖 AI Service ready: {self.model}")
         else:
-            print("⚠️ AI Service unavailable")
-            print(f"   API Key set: {bool(self.api_key)}")
+            print(f"⚠️ AI Service unavailable")
 
     def _check_availability(self):
+        """Check if Groq API is available"""
         if not self.api_key:
             print("⚠️ No GROQ_API_KEY found in environment")
             return False
         try:
-            import requests
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            response = requests.get(
-                "https://api.groq.com/openai/v1/models",
-                headers=headers,
-                timeout=10
-            )
-            if response.status_code == 200:
-                print("✅ Groq API connection successful")
-                return True
-            else:
-                print(f"⚠️ Groq API returned: {response.status_code}")
-                return False
+            from groq import Groq
+            client = Groq(api_key=self.api_key)
+            # Test the API key
+            models = client.models.list()
+            print("✅ Groq API connection successful")
+            return True
         except Exception as e:
             print(f"⚠️ Groq API check failed: {e}")
             return False
 
     def analyze_findings(self, findings, language, context=None):
+        """Analyze vulnerabilities using Groq API"""
         if not findings:
             return self._empty_result()
 
@@ -64,7 +54,7 @@ class AIPrioritizer:
 
         try:
             prompt = self._build_prompt(findings, language, context)
-            raw_response = self._call_groq_direct(prompt)
+            raw_response = self._call_groq(prompt)
 
             if raw_response and not raw_response.startswith('Error:'):
                 parsed = self._parse_response(raw_response)
@@ -95,15 +85,7 @@ class AIPrioritizer:
                 "tool": f.get('tool', 'unknown')
             })
 
-        prompt = f"""You are a senior security expert. Analyze each vulnerability and provide:
-
-1. CVSS v3.1 score (0.0-10.0)
-2. Priority: Critical/High/Medium/Low
-3. Remediation in BAD/FIX/ALWAYS format:
-   - BAD: Show the vulnerable code line
-   - FIX: Show the fixed code with specific changes
-   - ALWAYS: Best practice tip
-4. Exploitability: Brief realistic impact
+        prompt = f"""You are a senior security expert. Analyze these vulnerabilities.
 
 Language: {language}
 Context: {context or 'General application'}
@@ -111,63 +93,53 @@ Context: {context or 'General application'}
 Vulnerabilities:
 {json.dumps(findings_json, indent=2)}
 
-Respond with ONLY valid JSON:
+For each vulnerability provide:
+1. CVSS score (0-10)
+2. Priority: Critical/High/Medium/Low
+3. Remediation (specific fix)
+4. Exploitability (impact note)
 
+Respond with ONLY valid JSON:
 {{
   "findings": [
-    {{
-      "id": 0,
-      "cvss_score": 9.8,
-      "priority": "Critical",
-      "remediation": "BAD: system(user_input); FIX: system(\\"/bin/echo \\" + sanitize(user_input)); ALWAYS: Validate and sanitize all user input.",
-      "exploitability": "An attacker can inject malicious system commands."
-    }}
+    {{"id": 0, "cvss_score": 7.5, "priority": "High", "remediation": "fix", "exploitability": "impact"}}
   ],
   "summary": {{
-    "critical_count": 0,
-    "high_count": 0,
-    "medium_count": 0,
-    "low_count": 0,
-    "total": 0,
-    "overall_priority": "Address critical severity findings first."
+    "critical_count": 0, "high_count": 0, "medium_count": 0, "low_count": 0,
+    "total": 0, "overall_priority": "summary"
   }}
 }}"""
         return prompt
 
-    def _call_groq_direct(self, prompt):
+    def _call_groq(self, prompt):
         start_time = time.time()
         try:
-            import requests
+            from groq import Groq
 
-            url = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            data = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "You are a security expert. Respond only with valid JSON. Use BAD/FIX/ALWAYS format for remediation."},
+            if not self.api_key:
+                return "Error: No API key"
+
+            client = Groq(api_key=self.api_key)
+
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a security expert. Respond with valid JSON only."},
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": 0.1,
-                "max_tokens": 2000
-            }
-
-            response = requests.post(url, headers=headers, json=data, timeout=self.timeout)
+                model=self.model,
+                temperature=0.1,
+                max_tokens=2000,
+                timeout=self.timeout
+            )
 
             elapsed = time.time() - start_time
-            if response.status_code == 200:
-                result = response.json()
-                response_text = result['choices'][0]['message']['content']
-                print(f"✅ Groq call took {elapsed:.1f}s, response length {len(response_text)} chars")
-                return response_text
-            else:
-                print(f"❌ Groq API error: {response.status_code}")
-                return f"Error: {response.status_code}"
+            response_text = chat_completion.choices[0].message.content
+            print(f"✅ Groq call took {elapsed:.1f}s")
+            return response_text
 
         except Exception as e:
-            print(f"❌ Groq call failed: {str(e)}")
+            elapsed = time.time() - start_time
+            print(f"❌ Groq call failed after {elapsed:.1f}s: {str(e)}")
             return f"Error: {str(e)}"
 
     def _parse_response(self, response):
@@ -202,15 +174,13 @@ Respond with ONLY valid JSON:
                 if highest is None or p == 'critical' or (p == 'high' and highest != 'critical'):
                     highest = p
 
-        priority_text = f"Address {highest} severity findings first." if highest else "Review findings by severity."
-
         return {
             "critical_count": counts['critical'],
             "high_count": counts['high'],
             "medium_count": counts['medium'],
             "low_count": counts['low'],
             "total": total_findings,
-            "overall_priority": priority_text
+            "overall_priority": f"Address {highest} severity findings first." if highest else "Review findings by severity."
         }
 
     def _fallback_result(self, findings):
