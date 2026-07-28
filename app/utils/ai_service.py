@@ -33,7 +33,6 @@ class AIPrioritizer:
         if not self.api_key:
             return False
         try:
-            # Try using requests directly instead of groq client
             import requests
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -81,7 +80,7 @@ class AIPrioritizer:
             return self._fallback_result(findings)
 
     def _build_prompt(self, findings, language, context):
-        """Build the prompt for Groq API"""
+        """Build the prompt for Groq API with specific format"""
         findings_json = []
         for f in findings[:15]:
             findings_json.append({
@@ -104,8 +103,18 @@ Vulnerabilities found:
 For EACH vulnerability, provide:
 1. CVSS v3.1 base score (0.0-10.0)
 2. Priority: "Critical", "High", "Medium", or "Low"
-3. Remediation recommendation (detailed, actionable)
-4. Exploitability note (realistic impact)
+3. Remediation: Provide the EXACT format below:
+   - Start with "BAD: " and show the vulnerable code pattern
+   - Then "FIX: " and show the secure code pattern
+   - Then "ALWAYS: " and add the general security rule
+
+4. Exploitability: One line describing how an attacker can exploit this
+
+Example for command injection:
+"Remediation": "BAD: os.system('ping ' + host); FIX: subprocess.run(['ping', host], check=True); ALWAYS: Never use os.system() or subprocess.call() with shell=True for user input."
+
+Example for strcpy:
+"Remediation": "BAD: strcpy(buffer, input); FIX: strncpy(buffer, input, sizeof(buffer)-1); buffer[sizeof(buffer)-1] = '\\0'; ALWAYS: Use bounds-checking functions and validate input length."
 
 Respond with ONLY valid JSON, no other text, no markdown.
 
@@ -116,8 +125,8 @@ Structure:
       "id": 0,
       "cvss_score": 7.5,
       "priority": "High",
-      "remediation": "Complete detailed remediation here",
-      "exploitability": "Complete detailed exploitability note here"
+      "remediation": "BAD: vulnerable_code(); FIX: secure_code(); ALWAYS: best practice rule.",
+      "exploitability": "Attacker can execute arbitrary commands."
     }}
   ],
   "summary": {{
@@ -126,7 +135,7 @@ Structure:
     "medium_count": 0,
     "low_count": 0,
     "total": 0,
-    "overall_priority": "summary here"
+    "overall_priority": "Address critical and high severity findings first."
   }}
 }}"""
         return prompt
@@ -145,7 +154,7 @@ Structure:
             payload = {
                 "model": self.model,
                 "messages": [
-                    {"role": "system", "content": "You are a security expert. Respond only with valid JSON."},
+                    {"role": "system", "content": "You are a security expert. Respond only with valid JSON. Use the BAD/FIX/ALWAYS format for remediation."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.1,
@@ -235,8 +244,8 @@ Structure:
                 "id": i,
                 "cvss_score": severity_score.get(severity, 1.0),
                 "priority": severity.capitalize(),
-                "remediation": "AI service unavailable. Review manually.",
-                "exploitability": "AI service unavailable.",
+                "remediation": f"BAD: Vulnerability detected. FIX: Follow standard security best practices. ALWAYS: Review and validate all user input.",
+                "exploitability": "AI service unavailable. Review manually.",
                 "is_fallback": True
             })
 
@@ -254,7 +263,7 @@ Structure:
                 "medium_count": counts['medium'],
                 "low_count": counts['low'],
                 "total": len(findings),
-                "overall_priority": "AI unavailable. Fix critical/high first.",
+                "overall_priority": "AI unavailable. Fix critical and high severity findings first.",
                 "is_fallback": True
             }
         }
