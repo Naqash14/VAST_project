@@ -5,7 +5,7 @@ A comprehensive web-based vulnerability analysis platform that combines **static
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Flask Version](https://img.shields.io/badge/flask-2.3.3-green.svg)](https://flask.palletsprojects.com)
 [![License](https://img.shields.io/badge/license-MIT-red.svg)](LICENSE)
-[![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
 
 ---
 
